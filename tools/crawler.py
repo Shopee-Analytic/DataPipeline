@@ -3,7 +3,7 @@ import json
 import re
 from datetime import datetime
 
-def crawl(url_of_category="https://shopee.vn/dien-thoai-phu-kien-cat.84", newest="newest"):
+def crawl(url_of_category):
     '''
     If newest <= 'newest' -> Only crawl 100 newest data
     Elif newest == 1 -> Crawl everything
@@ -11,12 +11,12 @@ def crawl(url_of_category="https://shopee.vn/dien-thoai-phu-kien-cat.84", newest
 
     # Test if web response
     if requests.get('https://shopee.vn').status_code != 200:
-        return None
+        return False
 
     # Using regex to match the category_id
-    match = re.search(r'.+-cat.(\d+)', url_of_category)
+    match = re.search(r'https://shopee.vn/.+-cat.(\d+)', url_of_category)
     if not match:
-        return None
+        return False
 
     shop_id = match.group(1)
     newest=0 
@@ -26,7 +26,7 @@ def crawl(url_of_category="https://shopee.vn/dien-thoai-phu-kien-cat.84", newest
     data = requests.get(url.format(limit, shop_id, newest),
                         headers={"content-type": "text"})
 
-    save_data_to_file(select_properties(data.json()))
+    return save_data_to_file(select_properties(data.json()))
 
 def select_properties(new_data): # data = [{}, {}, {}, ...]
     data = []
@@ -70,11 +70,11 @@ def save_data_to_file(new_data): # data = [{}, {}, {}, ...]
         with open('data/data.json', 'w+') as f_write:
             json.dump(data, f_write, indent=4)
         
-        print("append new data to file")
+        print(f"\tappend {len(new_data)} new data to file\n")
     except: # File not existed -> create file and add data
         with open('data/data.json', 'w+') as f_write:
             json.dump(new_data, f_write, indent=4)
         
-        print("file empty, create and add new data")
+        print(f"\tfile empty, create and add  {len(new_data)} data\n")
 
-crawl()
+    return True
