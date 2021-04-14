@@ -36,7 +36,7 @@ if __name__ == "__main__":
         assert sys.argv[2] in ("--input", "-I"), 'Should be "--input" or "-I".'
         assert sys.argv[3].endswith(('.yml', ".yaml")) , "File should named by 'file_name.yml'."
         assert path.exists('config/{}'.format(sys.argv[3])), "File not existed"
-        assert sys.argv[4] in ("--ouput", "-O"), 'Should be "--output" or "-0".'
+        assert sys.argv[4] in ("--output", "-O"), 'Should be "--output" or "-0".'
         assert sys.argv[5].endswith(".json"), 'File should be named by "file_name.json".'
         links = load_config(sys.argv[3])
         assert links != None, f"No key in {sys.argv[3]}."
