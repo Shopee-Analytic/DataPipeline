@@ -4,9 +4,10 @@ __pycache__/
 *$py.class
 .vscode
 data.json
+unittest.py
 # C extensions
 *.so
-
+test.py
 # Distribution / packaging
 .Python
 build/
