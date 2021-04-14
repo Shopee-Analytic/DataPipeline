@@ -49,7 +49,7 @@ def select_properties(new_data): # data = [{}, {}, {}, ...]
                 "rating_star": item['item_rating']['rating_star'],
                 "rating_count": item['item_rating']['rating_count'],
                 "shop_location": item["shop_location"],
-                "shopee_verified": item["shopee_verified"] == "true",
+                "shopee_verified": item["shopee_verified"],
                 "product_link": r"https://shopee.vn/{}-i.{}.{}".format(item['name'], item['shopid'], item['itemid']),
                 "fetched_timestamp": datetime.timestamp(datetime.now())
             }
