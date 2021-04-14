@@ -11,6 +11,6 @@ Using python==3.8.5
 ## Data visualization
 - Data we'll be stored in _data/data.json_ as dicts in a list:
 
-|product_id | shop_id  | product_name |  ....  |
-|    ---    |   ---    |     ---      |  ---   |
+|product_id | shop_id  | product_name |   ...  |
+|    :---:  |   :---:  |     :---:    |  :---: |
 |1357623842 | 80094231 | product_name | others |

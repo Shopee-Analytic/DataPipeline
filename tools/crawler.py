@@ -3,22 +3,18 @@ import json
 import re
 from datetime import datetime
 
-def crawl(url_of_category):
-    '''
-    If newest <= 'newest' -> Only crawl 100 newest data
-    Elif newest == 1 -> Crawl everything
-    '''
+def crawl(url_of_category, file_output):
 
     # Test if web response
-    if requests.get('https://shopee.vn').status_code != 200:
+    if requests.get(url_of_category).status_code != 200:
         return False
 
     # Using regex to match the category_id
-    match = re.search(r'https://shopee.vn/.+-cat.(\d+)', url_of_category)
-    if not match:
+    category_id = re.search(r'https://shopee.vn/.+-cat.(\d+)', url_of_category)
+    if not category_id:
         return False
 
-    shop_id = match.group(1)
+    shop_id = category_id.group(1)
     newest=0 
     limit = 100 # newest = 0 -> `limit` newest product
     url = 'https://shopee.vn/api/v4/search/search_items?by=relevancy&limit={}&match_id={}&newest={}&order=desc&page_type=search&version=2'
@@ -26,7 +22,7 @@ def crawl(url_of_category):
     data = requests.get(url.format(limit, shop_id, newest),
                         headers={"content-type": "text"})
 
-    return save_data_to_file(select_properties(data.json()))
+    return save_data_to_file(file_output, select_properties(data.json()))
 
 def select_properties(new_data): # data = [{}, {}, {}, ...]
     data = []
@@ -59,22 +55,26 @@ def select_properties(new_data): # data = [{}, {}, {}, ...]
     return data
 
 
-def save_data_to_file(new_data): # data = [{}, {}, {}, ...]
+def save_data_to_file(file_output, new_data): # data = [{}, {}, {}, ...]
+    if not file_output.endswith(".json"):
+        return False
     try:
         # Check if file already exists and append data
-        with open('data/data.json', 'r+') as f_read:
+        with open(f'data/{file_output}', 'r+') as f_read:
             data = json.load(f_read)
 
             data += new_data
-
-        with open('data/data.json', 'w+') as f_write:
+        with open(f'data/{file_output}', 'w+') as f_write:
             json.dump(data, f_write, indent=4)
         
-        print(f"\tappend {len(new_data)} new data to file\n")
-    except: # File not existed -> create file and add data
-        with open('data/data.json', 'w+') as f_write:
+        print(f"\tappend {len(new_data)} new data to data\{file_output}.\n")
+    except FileNotFoundError: # File not existed -> create file and add data
+        with open(f'data/{file_output}', 'w+') as f_write:
             json.dump(new_data, f_write, indent=4)
         
-        print(f"\tfile empty, create and add  {len(new_data)} data\n")
+        print(f"\tfile empty, create and add  {len(new_data)} data in data\\{file_output}.\n")
+
+    else:
+        print("Another unknown error.")
 
     return True
