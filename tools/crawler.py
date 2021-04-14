@@ -36,7 +36,7 @@ def select_properties(new_data): # data = [{}, {}, {}, ...]
                 "shop_id": item["shopid"],
                 "product_name": item["name"],
                 "category_ids": item["label_ids"],
-                "image": "https://cf.shopee.vn/file/{}_tn".format(item["image"]),
+                "image": r"https://cf.shopee.vn/file/{}_tn".format(item["image"]),
                 "currency": item['currency'],
                 "stock": item['stock'],
                 "sold": item['sold'],
@@ -73,7 +73,6 @@ def save_data_to_file(file_output, new_data): # data = [{}, {}, {}, ...]
             json.dump(new_data, f_write, indent=4)
         
         print(f"\tfile empty, create and add  {len(new_data)} data in data\\{file_output}.\n")
-
     else:
         print("Another unknown error.")
 

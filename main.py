@@ -6,7 +6,7 @@ from os import path, mkdir, getcwd
 
 def is_int(val):
     try:
-        num = int(val)
+        int(val)
     except ValueError:
         return False
     return True
@@ -53,10 +53,11 @@ if __name__ == "__main__":
         assert sys.argv[3].endswith(".json"), 'File should be named by "file_name.json".'
         assert path.exists('data/{}'.format(sys.argv[3]))
         try:
-            assert is_int(sys.argv[4]), "Number of product should be an integer"
+            assert is_int(sys.argv[4]), "Number of product should be an integer.\n"
             length = int(sys.argv[4])
         except AssertionError as msg:
             print(msg)
+            length=0
         except IndexError:
             length=1
 

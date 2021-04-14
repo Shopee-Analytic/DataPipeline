@@ -5,7 +5,8 @@ Crawl data from Shopee and analyze
 Using python==3.8.5
 
 1. Run ```pip install requirements.txt``` to install all needed packages
-2. Run ```main.py crawl --file config.yml``` to start crawling
+2. Run ```main.py crawl --input data.json --output config.yml``` to start crawling
+3. Run ```main.py visualize --file data.json <number_of_page>``` to visualize it
 
 
 ## Data visualization
