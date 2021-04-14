@@ -32,9 +32,9 @@ def select_properties(new_data): # data = [{}, {}, {}, ...]
     data = []
 
     items = new_data["items"]
-    for i in range(len(items)):
-        item = items[i]["item_basic"]
-        data.append(
+    for item in items:
+        item = item["item_basic"]
+        data.append( 
             {
                 "product_id": item['itemid'],
                 "shop_id": item["shopid"],
@@ -58,6 +58,7 @@ def select_properties(new_data): # data = [{}, {}, {}, ...]
 
 def save_data_to_file(new_data): # data = [{}, {}, {}, ...]
     try:
+        # Check if file already exists and append data
         with open('data/data.json', 'r+') as f_read:
             data = json.load(f_read)
 
@@ -67,7 +68,7 @@ def save_data_to_file(new_data): # data = [{}, {}, {}, ...]
             json.dump(data, f_write, indent=4)
         
         print("append new data to file")
-    except:
+    except: # File not existed -> create file and add data
         with open('data/data.json', 'w+') as f_write:
             json.dump(new_data, f_write, indent=4)
         
