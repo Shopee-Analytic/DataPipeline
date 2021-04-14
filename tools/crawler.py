@@ -48,7 +48,7 @@ def select_properties(new_data): # data = [{}, {}, {}, ...]
                 "discount": item['raw_discount'],
                 "rating_star": item['item_rating']['rating_star'],
                 "rating_count": item['item_rating']['rating_count'],
-                "feedback_count": item['"cmt_count"'],
+                "feedback_count": item['cmt_count'],
                 "shop_location": item["shop_location"],
                 "shopee_verified": item["shopee_verified"],
                 "product_link": r"https://shopee.vn/{}-i.{}.{}".format(item['name'], item['shopid'], item['itemid']),
