@@ -1,6 +1,7 @@
 astroid==2.4.2
 attrs==20.3.0
 Automat==20.2.0
+autopep8 @ file:///tmp/build/80754af9/autopep8_1615918855173/work
 backcall==0.2.0
 certifi==2020.12.5
 cffi==1.14.5
@@ -9,6 +10,7 @@ constantly==15.1.0
 cryptography==3.4.7
 cssselect==1.1.0
 decorator==4.4.2
+dnspython==2.1.0
 h2==3.2.0
 hpack==3.0.0
 hyperframe==5.2.0
@@ -38,10 +40,12 @@ prompt-toolkit==3.0.14
 Protego==0.1.16
 pyasn1==0.4.8
 pyasn1-modules==0.2.8
+pycodestyle @ file:///tmp/build/80754af9/pycodestyle_1615748559966/work
 pycparser==2.20
 PyDispatcher==2.0.5
 Pygments==2.7.4
 pylint==2.6.0
+pymongo==3.11.3
 pyOpenSSL==20.0.1
 python-dateutil==2.8.1
 pytz==2021.1
