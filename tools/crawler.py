@@ -2,27 +2,44 @@ import requests
 import json
 import re
 from datetime import datetime
+from threading import Thread
+from queue import Queue
 
-def crawl(url_of_category, file_output):
+def crawl(url_of_category, newest):
 
+    limit = 100 # Can only crawl 100 row each request
+    category_id = get_category_id(url_of_category) # Category of the search link
+    url = get_url(limit, category_id, newest)
+    data = requests.get(url, headers={"content-type": "text"})
+    return select_properties(data.json())
+
+def crawl_to_file(url_of_category, file_output):
+    
+    limit = 100 # Can only crawl 100 row each request
+    category_id = get_category_id(url_of_category) # Category of the search link
+    newest = 0
+    url = get_url(limit, category_id, newest)
+    data = requests.get(url, headers={"content-type": "text"})
+    try:
+        assert save_data_to_file(file_output, select_properties(data.json())), f"Can't crawl data from this page:\n{url}\n"
+    except AssertionError as msg:
+        print(msg)
+    return True
+    
+def get_url(limit, category_id, newest):
+    return 'https://shopee.vn/api/v4/search/search_items?by=relevancy&limit={}&match_id={}&newest={}&order=desc&page_type=search&version=2'.format(limit, category_id, newest)
+
+def get_category_id(url_of_category):
     # Test if web response
     if requests.get(url_of_category).status_code != 200:
-        return False
-
+        return None
+        
     # Using regex to match the category_id
-    category_id = re.search(r'https://shopee.vn/.+-cat.(\d+)', url_of_category)
+    category_id = re.search(r'https://shopee.vn/.+-cat.(\d+)', url_of_category).group(1)
     if not category_id:
-        return False
+        return None
 
-    shop_id = category_id.group(1)
-    newest=0 
-    limit = 100 # newest = 0 -> `limit` newest product
-    url = 'https://shopee.vn/api/v4/search/search_items?by=relevancy&limit={}&match_id={}&newest={}&order=desc&page_type=search&version=2'
-
-    data = requests.get(url.format(limit, shop_id, newest),
-                        headers={"content-type": "text"})
-
-    return save_data_to_file(file_output, select_properties(data.json()))
+    return category_id
 
 def select_properties(new_data): # data = [{}, {}, {}, ...]
     data = []
@@ -32,7 +49,7 @@ def select_properties(new_data): # data = [{}, {}, {}, ...]
         item = item["item_basic"]
         data.append( 
             {
-                "product_id": item['itemid'],
+                "_id": item['itemid'],
                 "shop_id": item["shopid"],
                 "product_name": item["name"],
                 "category_ids": item["label_ids"],
@@ -73,7 +90,4 @@ def save_data_to_file(file_output, new_data): # data = [{}, {}, {}, ...]
             json.dump(new_data, f_write, indent=4)
         
         print(f"\tfile empty, create and add  {len(new_data)} data in data\\{file_output}.\n")
-    else:
-        print("Another unknown error.")
-
     return True

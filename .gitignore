@@ -5,6 +5,8 @@ __pycache__/
 .vscode
 data.json
 unittest.py
+testdb.py
+testqueue.py
 # C extensions
 *.so
 test.py
