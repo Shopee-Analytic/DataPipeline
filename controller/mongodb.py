@@ -32,7 +32,7 @@ class ShopeeCrawlerDB:
             assert type(product_data) == list, "Data is on wrong format, it should be a list."
             for product in product_data:
                 self.insert_one_product(product)
-            print(f"Insert {len(product_data)} data to database!")
+            # print(f"Insert {len(product_data)} data to database!")
         except AssertionError as msg:
             print(msg)
             return None

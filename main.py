@@ -4,12 +4,6 @@ from tools.worker import start_crawling
 import sys
 import yaml
 from os import path, mkdir, getcwd
-def is_int(val):
-    try:
-        int(val)
-    except ValueError:
-        return False
-    return True
 
 def load_config(file):
     with open("config/"+file, 'r') as stream:
@@ -17,18 +11,8 @@ def load_config(file):
         return links
 
 if __name__ == "__main__":
-    try:
-        assert path.exists('config')
-    except:
-        print("Folder config not existed")
+    if not path.exists("config"):
         mkdir(path.join(getcwd(), 'config'))
-        print("config is created.\n")
-    try:
-        assert path.exists('data')
-    except:
-        print("Folder data not existed")
-        mkdir(path.join(getcwd(), 'data'))
-        print("data is created.\n")
 
     assert sys.argv[1] in ("crawl", "crawl_to_file", "visualize"), '"crawl" or "crawl_to_file" or "visualize" should be called'
 
@@ -40,6 +24,8 @@ if __name__ == "__main__":
         assert sys.argv[5].endswith(".json"), 'File should be named by "file_name.json".'
         links = load_config(sys.argv[3])
         assert links != None, f"No key in {sys.argv[3]}."
+        if not path.exists("data"):
+            mkdir(path.join(getcwd(), 'data'))
         for link in links:
             try:
                 print(f"Crawling {link}: ")
@@ -53,7 +39,7 @@ if __name__ == "__main__":
         assert sys.argv[3].endswith(".json"), 'File should be named by "file_name.json".'
         assert path.exists('data/{}'.format(sys.argv[3]))
         try:
-            assert is_int(sys.argv[4]), "Number of product should be an integer.\n"
+            assert int(sys.argv[4]), "Number of product should be an integer.\n"
             length = int(sys.argv[4])
         except AssertionError as msg:
             print(msg)
@@ -68,7 +54,7 @@ if __name__ == "__main__":
         assert sys.argv[2] in ("--input", "-I"), 'Should be "--input" or "-I".'
         assert sys.argv[3].endswith(('.yml', ".yaml")) , "File should be named by 'file_name.yml'."
         try:
-            assert is_int(sys.argv[4]), "Number of page should be an integer.\n"
+            assert int(sys.argv[4]), "Number of page should be an integer.\n"
             number_of_page=int(sys.argv[4])
         except AssertionError as msg:
             print(msg)
@@ -79,4 +65,5 @@ if __name__ == "__main__":
         print("Links in list:")
         for link in links:
             print(f"{link}")
+        print()
         start_crawling(links, int(number_of_page))

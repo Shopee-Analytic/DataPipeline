@@ -1,48 +1,37 @@
-from queue import Queue
-from threading import Thread
-from tools.crawler import crawl
-from  controller.mongodb import ShopeeCrawlerDB
+from controller.mongodb import ShopeeCrawlerDB
+from tools.crawler import select_properties, get_category_id, crawl, get_url
 import time
+import concurrent.futures
+
+count_total = count = 0
 
 
-class Worker(Thread):
-    def __init__(self, threadID, url_of_category, newest):
-        Thread.__init__(self)
-        self.threadID = threadID
-        self.url_of_category = url_of_category
-        self.database = ShopeeCrawlerDB()
-        self.database.drop_product()
-        self.newest = newest
-
-    def run(self):
-        print(f"Starting worker {self.threadID}!")
-        data = crawl(url_of_category=self.url_of_category, newest=self.newest)
-        print(f"Worker {self.threadID} is handling page {int(self.newest/100) + 1} of link {self.url_of_category}.")
-        self.database.insert_many_products(data)
-        # if not self.is_alive():
-        print(f"Exiting worker {self.threadID}")
-
-def start_crawling(urls, num_of_page):
-    
-    for url in urls:
-        print(f"Crawling {url}:") # 2 workers working with the same link
-
-        newest_list = [i for i in range(0, (num_of_page-1)*100+1, 100)]
-        while len(newest_list) >0:
-            # Create and asign task for workers
-            thread1 = Worker(1, url, newest_list.pop())
-            thread1.start()
-            if len(newest_list) > 0:
-                thread2 = Worker(2, url, newest_list.pop())
-                thread2.start()
-                
-            
-    # Wait until both workers done.
-    thread1.join()
-    try:
-        thread2.join()
-    except UnboundLocalError:
-        print("List is empty, worker 2 have nothing to do.")
-            
+def start_crawling(urls_of_category, num_of_page):
+    threaded_start = time.time()
+    global count, count_total
+    with concurrent.futures.ThreadPoolExecutor() as executor:
+        futures = []
+        for url_of_category in urls_of_category:
+            for newest in range(0, (num_of_page-1)*100 + 1, 100):
+                # print(f"Crawling {url_of_category} page {int(newest/100) + 1}!")
+                futures.append(executor.submit(
+                    crawl_and_insert, url_of_category, newest))
+            for future in concurrent.futures.as_completed(futures):
+                # print(future.result())
+                if count != 0:
+                    print(f'Crawl {count} data from {url_of_category}')
+                count = 0
+            print()
+    print("Threaded time:", time.time() - threaded_start)
+    print(f"\n\nTotal data: {count_total}")
 
 
+database = ShopeeCrawlerDB()
+
+
+def crawl_and_insert(url_of_category, newest):
+    global count, count_total
+    data = crawl(url_of_category, newest)
+    count += data[1]
+    count_total += data[1]
+    database.insert_many_products(data[0])
