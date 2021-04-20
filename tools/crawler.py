@@ -4,6 +4,7 @@ import re
 from datetime import datetime
 import random
 import time
+import logging
 
 
 def retry_with_backoff(retries=4, backoff_in_seconds=1):
@@ -15,10 +16,10 @@ def retry_with_backoff(retries=4, backoff_in_seconds=1):
                     return crawl(url_of_category, newest)
                 except:
                     if x == retries:
-                        print(f"Out of retries, can't crawl from page {int(newest/100)} of {url_of_category}.")
+                        logging.error(f"Out of retries, can't crawl from page {int(newest/100)} of {url_of_category}.")
                         raise
                     else:
-                        print(f"{x+1}-retry to crawl from page {int(newest/100)} of {url_of_category}.")
+                        logging.warning(f"{x+1}-retry to crawl from page {int(newest/100)} of {url_of_category}.")
                         sleep = (backoff_in_seconds * 2 ** x +
                                  random.uniform(0, 1))
                         time.sleep(sleep)
@@ -27,7 +28,7 @@ def retry_with_backoff(retries=4, backoff_in_seconds=1):
     return rwb
 
 
-@retry_with_backoff(retries=3)
+@retry_with_backoff()
 def crawl(url_of_category, newest) -> dict:
     limit = 100  # Can only crawl 100 row each request
     # Category of the search link
@@ -63,8 +64,7 @@ def get_category_id(url_of_category):
         return None
 
     # Using regex to match the category_id
-    category_id = re.search(
-        r'https://shopee.vn/.+-cat.(\d+)', url_of_category).group(1)
+    category_id = re.search(r'https://shopee.vn/.+-cat.(\d+)', url_of_category).group(1)
     if not category_id:
         return None
 
@@ -119,6 +119,5 @@ def save_data_to_file(file_output, new_data):  # data = [{}, {}, {}, ...]
         with open(f'data/{file_output}', 'w+') as f_write:
             json.dump(new_data, f_write, indent=4)
 
-        print(
-            f"\tfile empty, create and add  {len(new_data)} data in data\\{file_output}.\n")
+        print(f"\tfile empty, create and add  {len(new_data)} data in data\\{file_output}.\n")
     return True

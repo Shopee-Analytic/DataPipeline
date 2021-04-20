@@ -63,7 +63,6 @@ if __name__ == "__main__":
         print("Links in list:")
         for link in links:
             print(f"{link}")
-        print()
         start_crawling(links)
 
     elif sys.argv[1] == "scheduler":
