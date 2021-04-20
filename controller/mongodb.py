@@ -8,11 +8,11 @@ with open("controller/accounts.json") as f:
 class ShopeeCrawlerDB:
     try:
         # Check if server is available
-        assert pymongo.MongoClient("mongodb+srv://{}:{}@phase1.b2b5a.mongodb.net/myFirstDatabase?retryWrites=true&w=majority&ssl=true&ssl_cert_reqs=CERT_NONE".format(admin["username"], admin["password"])), "cant connect to server"
+        assert pymongo.MongoClient("mongodb+srv://{}:{}@cluster0.b2b5a.mongodb.net/myFirstDatabase?retryWrites=true&w=majority&ssl=true&ssl_cert_reqs=CERT_NONE".format(admin["username"], admin["password"])), "cant connect to server"
     except AssertionError as msg:
         print(msg)
     else:
-        client = pymongo.MongoClient("mongodb+srv://{}:{}@phase1.b2b5a.mongodb.net/myFirstDatabase?retryWrites=true&w=majority&ssl=true&ssl_cert_reqs=CERT_NONE".format(admin["username"], admin["password"]))
+        client = pymongo.MongoClient("mongodb+srv://{}:{}@cluster0.b2b5a.mongodb.net/myFirstDatabase?retryWrites=true&w=majority&ssl=true&ssl_cert_reqs=CERT_NONE".format(admin["username"], admin["password"]))
 
         mydb = client['ShopeeCrawler']
 

@@ -3,8 +3,7 @@ from tools.visualizer import visualize
 from tools.worker import start_crawling
 import sys
 import yaml
-from os import path, mkdir, getcwd
-
+from os import path, mkdir, getcwd, system
 def load_config(file):
     with open("config/"+file, 'r') as stream:
         links = yaml.safe_load(stream)
@@ -14,7 +13,7 @@ if __name__ == "__main__":
     if not path.exists("config"):
         mkdir(path.join(getcwd(), 'config'))
 
-    assert sys.argv[1] in ("crawl", "crawl_to_file", "visualize"), '"crawl" or "crawl_to_file" or "visualize" should be called'
+    assert sys.argv[1] in ("crawl", "crawl_to_file", "visualize", "scheduler"), '"crawl" or "crawl_to_file" or "visualize" should be called'
 
     if sys.argv[1] == "crawl_to_file":
         assert sys.argv[2] in ("--input", "-I"), 'Should be "--input" or "-I".'
@@ -61,9 +60,11 @@ if __name__ == "__main__":
         except IndexError:
             number_of_page=1
         links = load_config(sys.argv[3])
-        # start_crawling(links[0])
         print("Links in list:")
         for link in links:
             print(f"{link}")
         print()
-        start_crawling(links, int(number_of_page))
+        start_crawling(links)
+
+    elif sys.argv[1] == "scheduler":
+        system("python tools/scheduler.py")

@@ -4,10 +4,12 @@ import time
 import concurrent.futures
 
 count_total = count = 0
+database = ShopeeCrawlerDB()
 
 
-def start_crawling(urls_of_category, num_of_page):
+def start_crawling(urls_of_category):
     threaded_start = time.time()
+    num_of_page = 80
     global count, count_total
     with concurrent.futures.ThreadPoolExecutor() as executor:
         futures = []
@@ -16,7 +18,7 @@ def start_crawling(urls_of_category, num_of_page):
                 # print(f"Crawling {url_of_category} page {int(newest/100) + 1}!")
                 futures.append(executor.submit(
                     crawl_and_insert, url_of_category, newest))
-            for future in concurrent.futures.as_completed(futures):
+            for _ in concurrent.futures.as_completed(futures):
                 # print(future.result())
                 if count != 0:
                     print(f'Crawl {count} data from {url_of_category}')
@@ -24,10 +26,6 @@ def start_crawling(urls_of_category, num_of_page):
             print()
     print("Threaded time:", time.time() - threaded_start)
     print(f"\n\nTotal data: {count_total}")
-
-
-database = ShopeeCrawlerDB()
-
 
 def crawl_and_insert(url_of_category, newest):
     global count, count_total
