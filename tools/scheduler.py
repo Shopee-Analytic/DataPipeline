@@ -35,14 +35,13 @@ if __name__ == "__main__":
     scheduler = BackgroundScheduler(jobstores=jobstores, executors = executors, job_defaults = job_defaults)
 
     # scheduler.add_job(crawl, jobstore="mongo", id="Instantly")
-    scheduler.add_job(crawl, 'interval', hours=1, jobstore="mongo", name="Crawling SHOPEE")
+    # scheduler.add_job(crawl, 'interval', hours=1, jobstore="mongo", name="Crawling SHOPEE")
 
-    scheduler.print_jobs()
     scheduler.start()
-
+    scheduler.print_jobs(jobstore="mongo")
     while True:
         try:
-            time.sleep(2)
+            time.sleep(1)
             
         except (KeyboardInterrupt, Exception):
             scheduler.shutdown()
