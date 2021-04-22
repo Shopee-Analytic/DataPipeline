@@ -4,6 +4,7 @@ from tools.worker import start_crawling
 import sys
 import yaml
 from os import path, mkdir, getcwd, system
+from tools import scheduler
 def load_config(file):
     with open("config/"+file, 'r') as stream:
         links = yaml.safe_load(stream)
@@ -66,4 +67,12 @@ if __name__ == "__main__":
         start_crawling(links)
 
     elif sys.argv[1] == "scheduler":
-        system("python tools/scheduler.py")
+        assert sys.argv[2] in ("add_job", "run", "remove_all", "show"), 'Should be "add_job", "run" or "remove_all".'
+        if sys.argv[2] == "add_job":
+            scheduler.add_job()
+        elif sys.argv[2] == "run":
+            scheduler.run()
+        elif sys.argv[2] == "remove_all":
+            scheduler.remove_all()
+        elif sys.argv[2] == "show":
+            scheduler.show_all()

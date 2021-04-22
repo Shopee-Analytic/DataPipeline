@@ -82,7 +82,6 @@ def select_properties(new_data):  # data = [{}, {}, {}, ...]
                 "_id": item['itemid'],
                 "shop_id": item["shopid"],
                 "product_name": item["name"],
-                "category_ids": item["label_ids"],
                 "image": r"https://cf.shopee.vn/file/{}_tn".format(item["image"]),
                 "currency": item['currency'],
                 "stock": item['stock'],
@@ -98,8 +97,7 @@ def select_properties(new_data):  # data = [{}, {}, {}, ...]
                 "fetched_timestamp": datetime.timestamp(datetime.now())
             }
         )
-
-    return data, len(data)
+    return data
 
 
 def save_data_to_file(file_output, new_data):  # data = [{}, {}, {}, ...]
