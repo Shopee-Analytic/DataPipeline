@@ -58,6 +58,7 @@ class ShopeeCrawlerDB:
         data = {
             "_id": product["_id"],
             "product_name": product['product_name'],
+            "category_id": product["category_id"],
             "image": product["image"],
             "product_link": product["product_link"],
             "feedback_id": self.insert_feedback(product),

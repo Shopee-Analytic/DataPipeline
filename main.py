@@ -13,6 +13,8 @@ def load_config(file):
 if __name__ == "__main__":
     if not path.exists("config"):
         mkdir(path.join(getcwd(), 'config'))
+    if not path.exists("log"):
+        mkdir(path.join(getcwd(), "log"))
 
     assert sys.argv[1] in ("crawl", "crawl_to_file", "visualize", "scheduler"), '"crawl" or "crawl_to_file" or "visualize" should be called'
 

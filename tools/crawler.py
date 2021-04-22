@@ -5,21 +5,28 @@ from datetime import datetime
 import random
 import time
 import logging
+import logging.config
 
+logging.config.fileConfig('config/logging.conf')
+
+# create logger
+logger = logging.getLogger('crawler')
 
 def retry_with_backoff(retries=4, backoff_in_seconds=1):
     def rwb(crawl):
         def wrapper(url_of_category, newest):
             x = 0
+            
             while True:
                 try:
+                    
                     return crawl(url_of_category, newest)
                 except:
                     if x == retries:
-                        logging.error(f"Out of retries, can't crawl from page {int(newest/100)} of {url_of_category}.")
+                        logger.error(f"Out of retries, can't crawl from page {int(newest/100)+1} of {url_of_category}.")
                         raise
                     else:
-                        logging.warning(f"{x+1}-retry to crawl from page {int(newest/100)} of {url_of_category}.")
+                        logger.warning(f"{x+1}-retry to crawl from page {int(newest/100)+1} of {url_of_category}.")
                         sleep = (backoff_in_seconds * 2 ** x +
                                  random.uniform(0, 1))
                         time.sleep(sleep)
@@ -30,11 +37,13 @@ def retry_with_backoff(retries=4, backoff_in_seconds=1):
 
 @retry_with_backoff()
 def crawl(url_of_category, newest) -> dict:
+    
     limit = 100  # Can only crawl 100 row each request
     # Category of the search link
     category_id = get_category_id(url_of_category)
     url = get_url(limit, category_id, newest)
     data = requests.get(url, headers={"content-type": "text"}, timeout=5)
+    logger.info(f"Crawl from page {int(newest/100)+1} of {url_of_category} successfully.")
     return select_properties(data.json())
 
 
@@ -82,6 +91,7 @@ def select_properties(new_data):  # data = [{}, {}, {}, ...]
                 "_id": item['itemid'],
                 "shop_id": item["shopid"],
                 "product_name": item["name"],
+                "category_id": item['catid'],
                 "image": r"https://cf.shopee.vn/file/{}_tn".format(item["image"]),
                 "currency": item['currency'],
                 "stock": item['stock'],
