@@ -3,10 +3,7 @@ __pycache__/
 *.py[cod]
 *$py.class
 .vscode
-data.json
-unittest.py
-testdb.py
-testqueue.py
+
 # C extensions
 *.so
 test.py
@@ -131,3 +128,10 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+# Personal file
+data.json
+unittest.py
+testdb.py
+testqueue.py
+log/

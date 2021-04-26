@@ -4,21 +4,29 @@ import re
 from datetime import datetime
 import random
 import time
+import logging
+import logging.config
 
+logging.config.fileConfig('config/logging.conf')
+
+# create logger
+logger = logging.getLogger('crawler')
 
 def retry_with_backoff(retries=4, backoff_in_seconds=1):
     def rwb(crawl):
         def wrapper(url_of_category, newest):
             x = 0
+            
             while True:
                 try:
+                    
                     return crawl(url_of_category, newest)
                 except:
                     if x == retries:
-                        print(f"Out of retries, can't crawl from page {int(newest/100)} of {url_of_category}.")
+                        logger.error(f"Out of retries, can't crawl from page {int(newest/100)+1} of {url_of_category}.")
                         raise
                     else:
-                        print(f"{x+1}-retry to crawl from page {int(newest/100)} of {url_of_category}.")
+                        logger.warning(f"{x+1}-retry to crawl from page {int(newest/100)+1} of {url_of_category}.")
                         sleep = (backoff_in_seconds * 2 ** x +
                                  random.uniform(0, 1))
                         time.sleep(sleep)
@@ -27,13 +35,15 @@ def retry_with_backoff(retries=4, backoff_in_seconds=1):
     return rwb
 
 
-@retry_with_backoff(retries=3)
+@retry_with_backoff()
 def crawl(url_of_category, newest) -> dict:
+    
     limit = 100  # Can only crawl 100 row each request
     # Category of the search link
     category_id = get_category_id(url_of_category)
     url = get_url(limit, category_id, newest)
     data = requests.get(url, headers={"content-type": "text"}, timeout=5)
+    logger.info(f"Crawl from page {int(newest/100)+1} of {url_of_category} successfully.")
     return select_properties(data.json())
 
 
@@ -63,8 +73,7 @@ def get_category_id(url_of_category):
         return None
 
     # Using regex to match the category_id
-    category_id = re.search(
-        r'https://shopee.vn/.+-cat.(\d+)', url_of_category).group(1)
+    category_id = re.search(r'https://shopee.vn/.+-cat.(\d+)', url_of_category).group(1)
     if not category_id:
         return None
 
@@ -82,7 +91,7 @@ def select_properties(new_data):  # data = [{}, {}, {}, ...]
                 "_id": item['itemid'],
                 "shop_id": item["shopid"],
                 "product_name": item["name"],
-                "category_ids": item["label_ids"],
+                "category_id": item['catid'],
                 "image": r"https://cf.shopee.vn/file/{}_tn".format(item["image"]),
                 "currency": item['currency'],
                 "stock": item['stock'],
@@ -95,11 +104,10 @@ def select_properties(new_data):  # data = [{}, {}, {}, ...]
                 "shop_location": item["shop_location"],
                 "shopee_verified": item["shopee_verified"],
                 "product_link": r"https://shopee.vn/{}-i.{}.{}".format(item['name'], item['shopid'], item['itemid']),
-                "fetched_timestamp": datetime.timestamp(datetime.now())
+                "fetched_timestamp": datetime.timestamp(datetime.utcnow())
             }
         )
-
-    return data, len(data)
+    return data
 
 
 def save_data_to_file(file_output, new_data):  # data = [{}, {}, {}, ...]
@@ -119,6 +127,5 @@ def save_data_to_file(file_output, new_data):  # data = [{}, {}, {}, ...]
         with open(f'data/{file_output}', 'w+') as f_write:
             json.dump(new_data, f_write, indent=4)
 
-        print(
-            f"\tfile empty, create and add  {len(new_data)} data in data\\{file_output}.\n")
+        print(f"\tfile empty, create and add  {len(new_data)} data in data\\{file_output}.\n")
     return True
