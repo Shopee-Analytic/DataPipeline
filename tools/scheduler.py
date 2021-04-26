@@ -11,7 +11,7 @@ import json
 
 with open("controller/accounts.json") as f:
     data = json.load(f)    
-    admin = data['admin']
+    admin = data['mongo']['admin']
 
 logging.config.fileConfig('config/logging.conf')
 
@@ -23,7 +23,7 @@ def crawl():
     os.system("python main.py crawl --input config.yml")
 
 def get_scheduler(jobstore="mongo"):
-    client = MongoClient("mongodb+srv://{}:{}@cluster0.b2b5a.mongodb.net/myFirstDatabase?retryWrites=true&w=majority&ssl=true&ssl_cert_reqs=CERT_NONE".format(admin["username"], admin["password"]))
+    client = MongoClient(admin['server_link'])
     jobstores = {
         "mongo": MongoDBJobStore(client=client)
     }
@@ -49,12 +49,11 @@ def add_job(trigger='interval', minutes=30, name="Crawl data from shopee"):
     scheduler.shutdown()
 
 def run():
-
     scheduler = get_scheduler()
     scheduler.start()
     scheduler.print_jobs(jobstore="mongo")
     if len(scheduler.get_jobs()) <=0:
-        print("There is no job in schedule")
+        logger.warning("There is no job in schedule")
     else:
         logger.info("Start crawling")
         while True:
@@ -62,9 +61,7 @@ def run():
                 time.sleep(1)
             except (KeyboardInterrupt, Exception):
                 scheduler.shutdown()
-                print("Stop working!")
                 logger.error("Stoping Scheduler!")
-                logger.info("Ended")
                 exit()
 
 def remove_all():

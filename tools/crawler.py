@@ -104,7 +104,7 @@ def select_properties(new_data):  # data = [{}, {}, {}, ...]
                 "shop_location": item["shop_location"],
                 "shopee_verified": item["shopee_verified"],
                 "product_link": r"https://shopee.vn/{}-i.{}.{}".format(item['name'], item['shopid'], item['itemid']),
-                "fetched_timestamp": datetime.timestamp(datetime.now())
+                "fetched_timestamp": datetime.timestamp(datetime.utcnow())
             }
         )
     return data
