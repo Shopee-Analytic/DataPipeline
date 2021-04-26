@@ -1,10 +1,11 @@
 import pymongo
 import json
 from datetime import datetime
-
+import concurrent.futures
+import logging
 with open("controller/accounts.json") as f:
     data = json.load(f)    
-    admin = data['admin']
+    admin = data['mongo']['admin']
 
 
 # Version 1 - Data in 1 collection
@@ -31,7 +32,7 @@ with open("controller/accounts.json") as f:
 
 # Version "star" db
 class ShopeeCrawlerDB:
-    client = pymongo.MongoClient("mongodb+srv://{}:{}@cluster0.b2b5a.mongodb.net/myFirstDatabase?retryWrites=true&w=majority&ssl=true&ssl_cert_reqs=CERT_NONE".format(admin["username"], admin["password"]))
+    client = pymongo.MongoClient(admin['server_link'])
     
     mydb = client['ShopeeCrawler']
 
@@ -43,15 +44,28 @@ class ShopeeCrawlerDB:
     Quantity = mydb["Quantity"]
     Time = mydb["Time"]
     
-    def insert_many_products(self, products):
-        inserted_products = []
-        for product in products:
-            # print(product)
-            inserted_id = self.insert_one_product(product)
-            # if inserted_id is not None:
+    # def insert_many_products(self, products):
+    #     inserted_products = []
+    #     for product in products:
+    #         # print(product)
+    #         inserted_id = self.insert_one_product(product)
+    #         # if inserted_id is not None:
                 
-            inserted_products.append(inserted_id)
+    #         inserted_products.append(inserted_id)
+    #     return inserted_products
 
+    def insert_many_products(self, products):
+        futures = []
+        inserted_products = []
+        with concurrent.futures.ThreadPoolExecutor(max_workers=20) as executor:
+            try:
+                for product in products:
+                    futures.append(executor.submit(self.insert_one_product, product))
+                for future in concurrent.futures.as_completed(futures):
+                    inserted_products.append(future.result())
+            except Exception as e:
+                logging.error(e)
+                executor.shutdown()
         return inserted_products
 
     def insert_one_product(self, product):
@@ -141,33 +155,17 @@ class ShopeeCrawlerDB:
             return self.Quantity.insert_one(data).inserted_id
 
     def insert_time(self, product):
+        data = {
+            "fetched_timestamp": product["fetched_timestamp"]
+        }
         try:
-            now = datetime.fromtimestamp(product["fetched_timestamp"])
-
-        
             return self.Time.update_one(
                 {"_id": self.find_one(product)["time_id"]},
-                {"$set":{
-                    "year": now.strftime("%Y"),
-                    "month": now.strftime("%m"),
-                    "day": now.strftime("%d"),
-                    "hour": now.strftime("%H"),
-                    "minute": now.strftime("%M"),
-                    "second": now.strftime("%S"),
-                }
-            },
+                {"$set":{data}},
             upsert=True
             ).upserted_id
         except (TypeError, AttributeError):
-            now = datetime.now()
-            return self.Time.insert_one({
-                "year": now.strftime("%Y"),
-                "month": now.strftime("%m"),
-                "day": now.strftime("%d"),
-                "hour": now.strftime("%H"),
-                "minute": now.strftime("%M"),
-                "second": now.strftime("%S"),
-            }).inserted_id
+            return self.Time.insert_one(data).inserted_id
 
     def find_one(self, product):
         return self.FactProduct.find_one({"_id": product["_id"]})
