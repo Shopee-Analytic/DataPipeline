@@ -1,9 +1,15 @@
+from os import path, mkdir, getcwd, system
+if not path.exists("config"):
+    mkdir(path.join(getcwd(), 'config'))
+if not path.exists("log"):
+    mkdir(path.join(getcwd(), "log"))
+
 from tools.crawler import crawl_to_file
 from tools.visualizer import visualize
 from tools.worker import start_crawling
 import sys
 import yaml
-from os import path, mkdir, getcwd, system
+
 from tools import scheduler
 def load_config(file):
     with open("config/"+file, 'r') as stream:
@@ -11,10 +17,7 @@ def load_config(file):
         return links
 
 if __name__ == "__main__":
-    if not path.exists("config"):
-        mkdir(path.join(getcwd(), 'config'))
-    if not path.exists("log"):
-        mkdir(path.join(getcwd(), "log"))
+
 
     assert sys.argv[1] in ("crawl", "crawl_to_file", "visualize", "scheduler"), '"crawl" or "crawl_to_file" or "visualize" should be called'
 
@@ -70,8 +73,12 @@ if __name__ == "__main__":
 
     elif sys.argv[1] == "scheduler":
         assert sys.argv[2] in ("add_job", "run", "remove_all", "show"), 'Should be "add_job", "run" or "remove_all".'
+        
         if sys.argv[2] == "add_job":
-            scheduler.add_job()
+            assert sys.argv[3] in ("--input", "-I"), 'Should be "--input" or "-I".'
+            assert sys.argv[4].endswith(('.yml', ".yaml")) , "File should be named by 'file_name.yml'."
+            links = load_config(sys.argv[4])
+            scheduler.add_job(links)
         elif sys.argv[2] == "run":
             scheduler.run()
         elif sys.argv[2] == "remove_all":

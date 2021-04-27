@@ -7,8 +7,8 @@ import time
 import logging
 import logging.config
 
-logging.config.fileConfig('config/logging.conf')
 
+logging.config.fileConfig('config/logging.conf')
 # create logger
 logger = logging.getLogger('crawler')
 
@@ -19,7 +19,6 @@ def retry_with_backoff(retries=4, backoff_in_seconds=1):
             
             while True:
                 try:
-                    
                     return crawl(url_of_category, newest)
                 except:
                     if x == retries:
