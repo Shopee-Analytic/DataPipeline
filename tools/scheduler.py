@@ -4,12 +4,10 @@ from apscheduler.executors.pool import ThreadPoolExecutor, ProcessPoolExecutor
 import time
 from datetime import datetime, timedelta
 import os
-from pymongo import MongoClient
 import logging
 import logging.config
-import json
 from tools.worker import crawl_and_insert
-
+from controller.mongodb import get_client
 
 # Load logger's config
 logging.config.fileConfig('config/logging.conf')
@@ -17,10 +15,7 @@ logging.config.fileConfig('config/logging.conf')
 logger = logging.getLogger('scheduler')
 
 def get_scheduler():
-    with open("controller/accounts.json") as f:
-        data = json.load(f)
-        admin = data['mongo']['admin']
-    client = MongoClient(admin['server_link'])
+    client = get_client()
     jobstores = {"mongo": MongoDBJobStore(client=client, collection="jobs")}
     executors = {'default': ThreadPoolExecutor(max_workers=20)}
     job_defaults = {"coalesce": False, "max_instances": 20, 'misfire_grace_time': None}
