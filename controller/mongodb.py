@@ -3,14 +3,38 @@ import json
 from datetime import datetime
 import concurrent.futures
 import logging
-with open("controller/accounts.json") as f:
-    data = json.load(f)    
-    admin = data['mongo']['admin']
+import random
+import time
 
+
+def retry_getclient_with_backoff(retries=4, backoff_in_seconds=1):
+    def rwb(get_client):
+        def wrapper():
+            x = 0
+            while True:
+                try:
+                    return get_client()
+                except:
+                    if x == retries:
+                        raise
+                    else:
+                        sleep = (backoff_in_seconds * 2 ** x +
+                                 random.uniform(0, 1))
+                        time.sleep(sleep)
+                        x += 1
+        return wrapper
+    return rwb
+
+@retry_getclient_with_backoff()
+def get_client():
+    with open("controller/accounts.json") as f:
+        data = json.load(f)
+        admin = data['mongo']['admin']
+    return pymongo.MongoClient(admin['server_link'])
 
 # Version 1 - Data in 1 collection
 class ShopeeCrawlerDB:
-    client = pymongo.MongoClient(admin['server_link'])
+    client = get_client()
     
     mydb = client['ShopeeCrawler']
     products = mydb['shopee']
