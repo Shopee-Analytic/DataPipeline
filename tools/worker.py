@@ -64,4 +64,8 @@ def crawl_and_insert(url_of_category, newest):
     count = 0
     data = crawl(url_of_category, newest)
     count += len(database.insert_many_products(data))
+    if count >0:
+        logger.info(f"Crawl and insert {count} data from {int(newest/100)+1}-{url_of_category.split('.')[-1]}.")
+    else:
+        logger.info(f"Nothing from {url_of_category}.")
     return count

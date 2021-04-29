@@ -132,6 +132,5 @@ dmypy.json
 # Personal file
 data.json
 unittest.py
-testdb.py
-testqueue.py
 log/
+test/
