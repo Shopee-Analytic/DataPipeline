@@ -81,32 +81,34 @@ def get_category_id(url_of_category):
 
 def select_properties(new_data):  # data = [{}, {}, {}, ...]
     data = []
-
-    items = new_data["items"]
-    for item in items:
-        item = item["item_basic"]
-        data.append(
-            {
-                "_id": item['itemid'],
-                "shop_id": item["shopid"],
-                "product_name": item["name"],
-                "category_id": item['catid'],
-                "image": r"https://cf.shopee.vn/file/{}_tn".format(item["image"]),
-                "currency": item['currency'],
-                "stock": item['stock'],
-                "sold": item['sold'],
-                "price": item['price'],
-                "discount": item['raw_discount'],
-                "rating_star": item['item_rating']['rating_star'],
-                "rating_count": item['item_rating']['rating_count'],
-                "feedback_count": item['cmt_count'],
-                "shop_location": item["shop_location"],
-                "shopee_verified": item["shopee_verified"],
-                "product_link": r"https://shopee.vn/{}-i.{}.{}".format(item['name'], item['shopid'], item['itemid']),
-                "fetched_timestamp": datetime.timestamp(datetime.utcnow())
-            }
-        )
-    return data
+    try:
+        items = new_data["items"]
+        for item in items:
+            item = item["item_basic"]
+            data.append(
+                {
+                    "_id": item['itemid'],
+                    "shop_id": item["shopid"],
+                    "product_name": item["name"],
+                    "category_id": item['catid'],
+                    "image": r"https://cf.shopee.vn/file/{}_tn".format(item["image"]),
+                    "currency": item['currency'],
+                    "stock": item['stock'],
+                    "sold": item['sold'],
+                    "price": item['price'],
+                    "discount": item['raw_discount'],
+                    "rating_star": item['item_rating']['rating_star'],
+                    "rating_count": item['item_rating']['rating_count'],
+                    "feedback_count": item['cmt_count'],
+                    "shop_location": item["shop_location"],
+                    "shopee_verified": item["shopee_verified"],
+                    "product_link": r"https://shopee.vn/{}-i.{}.{}".format(item['name'], item['shopid'], item['itemid']),
+                    "fetched_timestamp": datetime.timestamp(datetime.utcnow())
+                }
+            )
+        return data
+    except (TypeError, Exception):
+        return None
 
 
 def save_data_to_file(file_output, new_data):  # data = [{}, {}, {}, ...]

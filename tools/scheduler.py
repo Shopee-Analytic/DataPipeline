@@ -24,7 +24,7 @@ def get_scheduler():
     
 
 def add_job(urls, trigger='interval', days=1, hours=0, minutes=00):
-    pages = 81
+    pages = 85
     scheduler = get_scheduler()
     
     total = 0
