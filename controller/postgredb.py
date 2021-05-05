@@ -54,6 +54,122 @@ class DataWareHouse:
     pool = get_pool()
     
     db_version = "v3"
+
+    def create_tables_v3(self):
+        commands = (
+            """
+            DROP SCHEMA IF EXISTS v3 cascade
+            """,
+            """
+            CREATE SCHEMA v3
+            """,
+            """
+            SET search_path TO v3
+            """,
+            """
+            DROP TABLE IF EXISTS
+                shop_location,
+                shop,
+                product,
+                product_shop,
+                product_rating,
+                product_time,
+                currency,
+                product_price,
+                product_feedback,
+                product_quantity
+                CASCADE
+            """,
+            """ 
+            CREATE TABLE shop_location (
+                shop_location_id SERIAL PRIMARY KEY NOT NULL,
+                shop_city VARCHAR(255) NOT NULL
+            )
+            """,
+            """ 
+            CREATE TABLE shop (
+                shop_id BIGINT PRIMARY KEY,
+                shop_location_id INTEGER NOT NULL,
+                shopee_verified BOOL NOT NULL,
+                FOREIGN KEY (shop_location_id) REFERENCES shop_location (shop_location_id) ON UPDATE CASCADE ON DELETE CASCADE
+            )
+            """,
+            """
+            CREATE TABLE product (
+                product_id BIGINT PRIMARY KEY NOT NULL,
+                product_name VARCHAR(255) NOT NULL,
+                product_image VARCHAR(255) NOT NULL,
+                product_link VARCHAR(255) NOT NULL
+            )
+            """,
+            """
+            CREATE TABLE product_shop (
+                product_id BIGINT PRIMARY KEY NOT NULL,
+                shop_id BIGINT NOT NULL,
+                FOREIGN KEY (product_id) REFERENCES product (product_id) ON UPDATE CASCADE ON DELETE CASCADE,
+                FOREIGN KEY (shop_id) REFERENCES shop (shop_id) ON UPDATE CASCADE ON DELETE CASCADE
+            )
+            """,
+            """
+            CREATE TABLE product_rating (
+                product_id BIGINT PRIMARY KEY NOT NULL,
+                rating_star REAL NOT NULL,
+                rating_count BIGINT NOT NULL,
+                FOREIGN KEY (product_id) REFERENCES product (product_id) ON UPDATE CASCADE ON DELETE CASCADE
+            )
+            """,
+            """
+            CREATE TABLE currency (
+                currency_id SERIAL PRIMARY KEY NOT NULL,
+                currency VARCHAR(255) NOT NULL
+            )
+            """,
+            """
+            CREATE TABLE product_price (
+                product_id BIGINT PRIMARY KEY NOT NULL,
+                price FLOAT8 NOT NULL,
+                discount REAL NOT NULL,
+                currency_id INTEGER NOT NULL,
+                FOREIGN KEY (currency_id) REFERENCES currency (currency_id) ON UPDATE CASCADE ON DELETE CASCADE,
+                FOREIGN KEY (product_id) REFERENCES product (product_id) ON UPDATE CASCADE ON DELETE CASCADE
+            )
+            """,
+            """
+            CREATE TABLE product_feedback (
+                product_id BIGINT PRIMARY KEY NOT NULL,
+                feedback_count INTEGER NOT NULL,
+                FOREIGN KEY (product_id) REFERENCES product (product_id) ON UPDATE CASCADE ON DELETE CASCADE
+            )
+            """,
+            """
+            CREATE TABLE product_quantity (
+                product_id BIGINT PRIMARY KEY NOT NULL,
+                sold INTEGER NOT NULL,
+                stock INTEGER NOT NULL,
+                FOREIGN KEY (product_id) REFERENCES product (product_id) ON UPDATE CASCADE ON DELETE CASCADE
+            )
+            """,
+            """
+            CREATE TABLE product_time (
+                product_id BIGINT PRIMARY KEY NOT NULL,
+                fetched_time numeric NOT NULL,
+                FOREIGN KEY (product_id) REFERENCES product (product_id) ON UPDATE CASCADE ON DELETE CASCADE
+            )
+            """,
+            )
+        try:
+            conn = get_connection(self.pool)
+            cur = conn.cursor()
+            for command in commands:
+                cur.execute(command)
+            cur.close()
+            conn.commit()
+        except (Exception, psycopg2.DatabaseError) as error:
+            print(error)
+        finally:
+            if conn is not None:
+                conn.close()
+                
     def insert_shop_location(self, shop_city):
         sql = [
             "SELECT shop_location_id FROM "+self.db_version+".shop_location WHERE shop_city=%s",
