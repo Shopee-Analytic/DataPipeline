@@ -44,11 +44,14 @@ class ShopeeCrawlerDB:
 
     def insert_many_products(self, product_data):
         futures = []
-        with concurrent.futures.ThreadPoolExecutor(max_workers=20) as executor:
-            for product in product_data:
-                futures.append(executor.submit(self.insert_one_product, product))
+        try:
+            with concurrent.futures.ThreadPoolExecutor(max_workers=20) as executor:
+                for product in product_data:
+                    futures.append(executor.submit(self.insert_one_product, product))
 
-        return [future.result() for future in concurrent.futures.as_completed(futures)]
+            return [future.result() for future in concurrent.futures.as_completed(futures)]
+        except TypeError:
+            return None
         
     def find_all(self):
         return self.products.find({})
