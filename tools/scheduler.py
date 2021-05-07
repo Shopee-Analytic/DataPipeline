@@ -43,7 +43,7 @@ def add_job(urls, trigger='interval', days=1, hours=0, minutes=00):
                 minutes=minutes,
                 name=name,
                 id=name,
-                start_date=(datetime.now()+timedelta(minutes=20)).strftime("%Y-%m-%d %H:%M:%S"),
+                start_date=(datetime.now()+timedelta(minutes=5)).strftime("%Y-%m-%d %H:%M:%S"),
                 jobstore="mongo",
                 replace_existing=True
             )
