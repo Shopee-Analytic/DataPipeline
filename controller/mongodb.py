@@ -51,7 +51,7 @@ class ShopeeCrawlerDB:
 
             return [future.result() for future in concurrent.futures.as_completed(futures)]
         except TypeError:
-            return None
+            return []
         
     def find_all(self):
         return self.products.find({})
