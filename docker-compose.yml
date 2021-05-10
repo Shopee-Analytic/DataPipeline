@@ -1,0 +1,7 @@
+version: '3'
+services:
+    scheduler:
+        build: 
+            context: .
+            dockerfile: tools/dockerfile
+        entrypoint: ["python", "main.py"]
