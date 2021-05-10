@@ -1,86 +1,80 @@
-from apscheduler.schedulers.background import BackgroundScheduler, BlockingScheduler
+import os
+from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.jobstores.mongodb import MongoDBJobStore
-from apscheduler.executors.pool import ThreadPoolExecutor, ProcessPoolExecutor
+from apscheduler.executors.pool import ThreadPoolExecutor
 import time
 from datetime import datetime, timedelta
-import os
 import logging
-import logging.config
-from tools.worker import crawl_and_insert
-from controller.mongodb import get_client
+from data.mongodb import get_client
+from worker import crawl_and_insert
+import yaml
 
-# Load logger's config
-logging.config.fileConfig('config/logging.conf')
-# Create logger
-logger = logging.getLogger('scheduler')
 
-def get_scheduler():
-    client = get_client()
+logging.basicConfig(level=logging.DEBUG)
+logger = logging.getLogger(__name__)
+
+def get_scheduler(scheduler_type = "background"):
+    client = get_client("read_and_write")
+
     jobstores = {"mongo": MongoDBJobStore(client=client, collection="jobs")}
     executors = {'default': ThreadPoolExecutor(max_workers=20)}
     job_defaults = {"coalesce": False, "max_instances": 20, 'misfire_grace_time': None}
-
-    return BackgroundScheduler(jobstores=jobstores, executors=executors, job_defaults=job_defaults, jobstore="mongo")
     
+    return BackgroundScheduler(jobstores=jobstores, executors=executors, job_defaults=job_defaults, jobstore='mongo') # jobstore = "default" for store in memories
 
-def add_job(urls, trigger='interval', days=1, hours=0, minutes=00):
-    pages = 85
+def add_job(file="config.yml"):
     scheduler = get_scheduler()
-    
-    total = 0
-    for url in urls:
-        count = 0
-        for newest in range(0, (pages)*100, 100):
-            
-            name=f"{int(newest/100)+1}-{url.split('.')[-1]}"
-            
-            scheduler.add_job(
+    print("Start adding jobs")
+
+    path = "config"
+    with open(f'{path}/{file}') as f:
+        data = yaml.load(f, Loader=yaml.FullLoader)
+        links = data['links']
+        number_of_pages = data['number_of_pages']
+
+    jobs = []
+
+    for link in links:
+        for newest in range(0, (number_of_pages-1)*100+1, 100):
+            name = f"{int(newest/100)+1}-{link.split('.')[-1]}"
+            jobs.append(scheduler.add_job(
                 func=crawl_and_insert,
-                args=(url, newest),
-                trigger=trigger,
-                days=days,
-                hours=hours,
-                minutes=minutes,
+                args=(link, newest),
+                trigger='interval',
+                hours=6,
                 name=name,
                 id=name,
-                start_date=(datetime.now()+timedelta(minutes=5)).strftime("%Y-%m-%d %H:%M:%S"),
+                start_date=(datetime.now()+timedelta(minutes=1)).strftime("%Y-%m-%d %H:%M:%S"),
                 jobstore="mongo",
                 replace_existing=True
-            )
-            count +=1
-            logger.info(f'Create a new job "{name}".')
-        logger.info(f"Added {count} jobs from {url} to jobstore.")
-        total += count
-    logger.info(f"Added {total} jobs from all urls to jobstore.")
+            ))
+            logging.info(f'Create a new job "{name}".')
+    scheduler.start()
+
+def run_job(now=False, _id=None):
+    scheduler = get_scheduler()
+    if _id is None:
+        if now:
+            for job in scheduler.get_jobs(jobstore="mongo"):
+                job.modify(next_run_time=datetime.now())
+    else:
+        if now:
+            job = scheduler.get_jobs(jobstore="mongo", _id=_id)
+            job.modify(next_run_time=datetime.now())
+
     scheduler.start()
     while True:
         try:
             time.sleep(1)
-        except (Exception, KeyboardInterrupt):
+        except (KeyboardInterrupt, Exception):
             scheduler.shutdown()
             exit()
-    
 
-def run():
+def remove_job(_id=None):
     scheduler = get_scheduler()
-    scheduler.start()
-    while True:
-        try:
-            time.sleep(1)
-        except (Exception, KeyboardInterrupt):
-            scheduler.shutdown(wait=False)
-            exit()
+    if _id is not None:
+        scheduler.remove_job(job_id = _id, jobstore="mongo")
 
-def remove_all():
-    scheduler = get_scheduler()
-    scheduler.start()
-    scheduler.remove_all_jobs(jobstore="mongo")
-    scheduler.print_jobs()
-    scheduler.shutdown()
-    logger.info("Remove all jobs")
-
-def show_all():
-    scheduler = get_scheduler()
-    scheduler.start()
-    scheduler.print_jobs()
-    scheduler.shutdown()
+if __name__ == "__main__":
+    add_job()
+    run_job()

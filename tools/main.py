@@ -2,6 +2,7 @@ from scheduler import run_job, add_job, remove_job
 import sys
 
 
+
 # docker compose run scheduler --entrypoint -d \
 
 # add_job \
@@ -28,7 +29,10 @@ def main(args):
         else:
             run_job()
     elif "remove_job" in args:
-        remove_job()
+        try:
+            remove_job(args[2])
+        except:
+            remove_job()
 
 if __name__ == "__main__":
     main(sys.argv)

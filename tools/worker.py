@@ -1,67 +1,26 @@
-from controller.mongodb import ShopeeCrawlerDB
-from tools.crawler import select_properties, get_category_id, crawl, get_url
-import time
-import concurrent.futures
+import os
+from data.mongodb import ShopeeCrawlerDB
 import logging
-import logging.config
-from datetime import datetime
+import yaml
+from crawler import crawl
+import concurrent.futures
+import time
 
-database = ShopeeCrawlerDB()
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
-logging.config.fileConfig('config/logging.conf')
 
-# create logger
-logger = logging.getLogger('worker')
+datalake = ShopeeCrawlerDB()
 
-def start_crawling(urls_of_category):
-    
-    count_total = 0
-    threaded_start = time.time()
-
-    with concurrent.futures.ThreadPoolExecutor(max_workers=2) as executor:
-        try:
-            futures = []
-            for url_of_category in urls_of_category:
-                logger.info('Start crawling "{}"'.format(url_of_category))
-                time_start = time.time()
-                futures.append(executor.submit(handling_crawler, url_of_category))
-            for future in concurrent.futures.as_completed(futures):
-                count = future.result()
-                i = futures.index(future)
-                logger.info(f'Done crawling "{urls_of_category[i]}" in {time.time() - time_start}s.')
-                if count == 0:
-                    logger.info("There is nothing new from {}".format(urls_of_category[i]))
-                else:
-                    count_total += count
-                    logger.info('Crawl {} new data from {}'.format(count, urls_of_category[i]))
-        except Exception as e:
-            logger.error(e)
-            executor.shutdown()
-            exit()
-        logger.info("Threaded time: {}".format(str(time.time() - threaded_start)))
-        logger.info(f"Total data: {count_total}")
-
-def handling_crawler(url_of_category):
-    num_of_page = 80
-    count = 0
-    with concurrent.futures.ThreadPoolExecutor(max_workers=10) as executor:
-        try:
-            futures = []
-            for newest in range(0, (num_of_page-1)*100 + 1, 100):
-                futures.append(executor.submit(crawl_and_insert, url_of_category, newest))
-        except Exception as e:
-            logger.error(e)
-            exit()
-        else:
-            for future in concurrent.futures.as_completed(futures):
-                count += future.result()
-            for future in futures:
-                while not future.done():
-                    pass
+def crawl_and_insert(link, newest):
+    try:
+        data = crawl(link, newest)
+        count = len(datalake.insert_many_products(data))
+    except Exception as e:
+        logger.error(e)
+        return 0
+    else:
         return count
 
-def crawl_and_insert(url_of_category, newest):
-    count = 0
-    data = crawl(url_of_category, newest)
-    count = len(database.insert_many_products(data))
-    return count
+if __name__ == "__main__":
+    crawl_and_insert()

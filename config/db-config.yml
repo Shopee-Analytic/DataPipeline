@@ -1,0 +1,13 @@
+mongo:
+  admin:
+    url: "mongodb+srv://admin:olQc3qAr4GY3h8TB@cluster0.b2b5a.mongodb.net/myFirstDatabase?retryWrites=true&w=majority&ssl=true&ssl_cert_reqs=CERT_NONE"
+    usernamme: "admin"
+    password: "FFhqIBfg8WYeMGE0"
+  read_only:
+    url: "mongodb+srv://read_only:qgwXnYEiYDiodTmP@cluster0.b2b5a.mongodb.net/myFirstDatabase?retryWrites=true&w=majority&ssl=true&ssl_cert_reqs=CERT_NONE"
+    username: "read_only"
+    password: "qgwXnYEiYDiodTmP"
+  read_and_write:
+    url: "mongodb+srv://read_and_write:thBaV636CldcHOeX@cluster0.b2b5a.mongodb.net/myFirstDatabase?retryWrites=true&w=majority&ssl=true&ssl_cert_reqs=CERT_NONE"
+    username: "read_and_write"
+    password: "thBaV636CldcHOeX"
