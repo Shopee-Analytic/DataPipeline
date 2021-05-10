@@ -134,3 +134,4 @@ data.json
 unittest.py
 log/
 test/
+*.bat
