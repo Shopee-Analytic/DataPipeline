@@ -16,6 +16,7 @@ def crawl_and_insert(link, newest):
     try:
         data = crawl(link, newest)
         count = len(datalake.insert_many_products(data))
+        logger.info(f"Successfully crawled and inserted {count} data from {newest}-{link.split(".")[-1]}.")
     except Exception as e:
         logger.error(e)
         return 0

@@ -42,7 +42,7 @@ def get_url(category_id, newest) -> str:
 
 @retry_with_backoff()
 def get_data(url) -> dict:
-    return requests.get(url, headers={"content-type": "text"}, timeout=5).json()
+    return requests.get(url, headers={"content-type": "text"}, timeout=10).json()
 
 def select_properties(new_data) -> dict:  # data = [{}, {}, {}, ...]
     data = []
