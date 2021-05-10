@@ -2,18 +2,17 @@
 Crawl data from Shopee and analyze 
 
 ## Instructions
-Using python==3.8.5
+Using docker
 
-1. Run ```pip install requirements.txt``` to install all needed packages
-2. Crawl data
-    2.1 Run ```main.py crawl_to_file --input config.yml --output <file_name>.json``` to start crawling and save to file
-    2.2 Run ```main.py crawl --input config.yml <number_of_page=1>``` to start crawling and insert to database
-3. Run ```main.py visualize --file <file_name>.json <number_of_page>``` to visualize it
+```cli
+docker compose run scheduler --name <name_of_service> --entrypoint -d \
 
+add_job \
+# or add_job <yml file> \ 
 
-## Data visualization
-- Data we'll be stored in _data/data.json_ as dicts in a list:
+run_job \
+# or run_job now \
 
-|product_id | shop_id  | product_name |   ...  |
-|    :---:  |   :---:  |     :---:    |  :---: |
-|1357623842 | 80094231 | product_name | others |
+remove_job \
+# or remove_job <job_id> \
+```
