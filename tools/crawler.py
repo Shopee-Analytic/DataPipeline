@@ -27,7 +27,7 @@ def retry_with_backoff(retries=4, backoff_in_seconds=1):
         return wrapper
     return rwb
 
-def crawl(link, newest) -> dict:
+def crawl(link, newest):
     category_id = get_category_id(link)
     url = get_url(category_id, newest)
     data = get_data(url)
@@ -44,10 +44,10 @@ def get_url(category_id, newest) -> str:
 def get_data(url) -> dict:
     return requests.get(url, headers={"content-type": "text"}, timeout=5).json()
 
-def select_properties(data) -> dict:  # data = [{}, {}, {}, ...]
+def select_properties(new_data) -> dict:  # data = [{}, {}, {}, ...]
     data = []
     try:
-        items = data["items"]
+        items = new_data["items"]
         for item in items:
             item = item["item_basic"]
             data.append(
