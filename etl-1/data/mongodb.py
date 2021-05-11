@@ -7,7 +7,7 @@ from random import uniform
 import time
 
 
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
 def retry_getclient_with_backoff(retries=4, backoff_in_seconds=1):
@@ -47,7 +47,7 @@ class ShopeeCrawlerDB:
         if product is None:
             return self.products.insert_one(product_data).inserted_id
         else:
-            if self.is_same(product, product_data, "fetched_time"):
+            if self.is_same(product, product_data, ("fetched_time", "updated_at")):
                 return None
             else:
                 product_data["updated_at"] = product_data.pop("fetched_time")
@@ -68,5 +68,5 @@ class ShopeeCrawlerDB:
         return self.products.find_one({"_id": product_id})
 
     @staticmethod
-    def is_same(product_old, product_new, key_ignore) -> bool:
-        return all(product_old[key] == product_new[key] for key in product_old.keys() if key != key_ignore)
+    def is_same(product_old, product_new, key_ignore: list) -> bool:
+        return all(product_old[key] == product_new[key] for key in product_old.keys() if key in key_ignore)
