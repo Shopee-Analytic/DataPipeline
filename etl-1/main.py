@@ -1,4 +1,4 @@
-from scheduler import run_job, add_job, remove_job
+from tools.scheduler import run_job, add_job, remove_job
 import sys
 
 
@@ -22,7 +22,7 @@ def main(args):
         except Exception:
             add_job()
     elif "run_job" in args:
-        if "now" in args:
+        if "now" in args:   
             run_job(now=True)
         else:
             run_job()
@@ -31,7 +31,6 @@ def main(args):
 
 if __name__ == "__main__":
     main(sys.argv)
-
 
 
 # Funtion:

@@ -1,7 +1,7 @@
 import os
 from data.mongodb import ShopeeCrawlerDB
 import logging
-from crawler import crawl
+from tools.crawler import crawl
 import concurrent.futures
 import time
 

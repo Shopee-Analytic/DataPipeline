@@ -1,11 +1,10 @@
 FROM python:3.8.5-alpine
 
-WORKDIR /etl1/tools
-COPY tools/requirements.txt etl1/requirements.txt
+
+COPY requirements.txt etl1/requirements.txt
 RUN pip install -r etl1/requirements.txt
 
-COPY tools /etl1/tools
-COPY data /etl1/tools/data
-COPY config /etl1/tools/config
+WORKDIR /etl1
+COPY . /etl1
 
 ENTRYPOINT ["python", "main.py", "add_job", "-I", "config.yml"]
