@@ -1,6 +1,5 @@
 import pymongo
 import yaml
-from datetime import datetime
 import concurrent.futures
 import logging
 from random import uniform

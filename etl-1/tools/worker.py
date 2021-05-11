@@ -2,8 +2,6 @@ import os
 from data.mongodb import ShopeeCrawlerDB
 import logging
 from tools.crawler import crawl
-import concurrent.futures
-import time
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
