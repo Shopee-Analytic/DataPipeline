@@ -7,7 +7,7 @@ from random import uniform
 import time
 
 
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 def retry_getclient_with_backoff(retries=4, backoff_in_seconds=1):

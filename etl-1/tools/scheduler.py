@@ -9,7 +9,7 @@ from tools.worker import crawl_and_insert
 import yaml
 
 
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 def get_scheduler(scheduler_type = "background"):

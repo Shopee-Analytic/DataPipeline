@@ -7,4 +7,4 @@ RUN pip install -r etl1/requirements.txt
 WORKDIR /etl1
 COPY . /etl1
 
-ENTRYPOINT ["python", "main.py", "add_job", "-I", "config.yml"]
+ENTRYPOINT ["python", "main.py", "run_job", "-I", "config.yml"]
