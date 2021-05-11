@@ -67,5 +67,6 @@ class ShopeeCrawlerDB:
     def find_one_by_id(self, product_id) -> dict:
         return self.products.find_one({"_id": product_id})
 
+    @staticmethod
     def is_same(product_old, product_new, key_ignore) -> bool:
         return all(product_old[key] == product_new[key] for key in product_old.keys() if key != key_ignore)
