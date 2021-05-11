@@ -68,7 +68,7 @@ def select_properties(new_data) -> dict:  # data = [{}, {}, {}, ...]
                     "shop_location": item["shop_location"],
                     "shopee_verified": item["shopee_verified"],
                     "product_link": r"https://shopee.vn/{}-i.{}.{}".format(item['name'], item['shopid'], item['itemid']),
-                    "fetched_timestamp": datetime.timestamp(datetime.utcnow())
+                    "fetched_time": datetime.timestamp(datetime.utcnow())
                 }
             )
         return data

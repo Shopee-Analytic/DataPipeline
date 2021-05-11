@@ -7,6 +7,9 @@ from random import uniform
 import time
 
 
+logging.basicConfig(level=logging.DEBUG)
+logger = logging.getLogger(__name__)
+
 def retry_getclient_with_backoff(retries=4, backoff_in_seconds=1):
     def rwb(get_client):
         def wrapper(role='read_and_write'):
@@ -34,13 +37,21 @@ def get_client(role):
 
 # Version 1 - Data in 1 collection
 class ShopeeCrawlerDB:
-    client = get_client('read_and_write')
-    
-    mydb = client['ShopeeCrawler']
-    products = mydb['shopee']
+    def __init__(self, role='read_and_write'):
+        client = get_client(role)
+        mydb = client['ShopeeCrawler']
+        self.products = mydb['shopee']
 
     def insert_one_product(self, product_data):
-        return self.products.update_one({"_id": product_data["_id"]}, {"$set": product_data}, upsert=True).upserted_id # Check if product existed -> overwrite <> Handle duplicated data
+        product = self.find_one_by_id(product_id=product_data['_id'])
+        if product is None:
+            return self.products.insert_one(product_data).inserted_id
+        else:
+            if self.is_same(product, product_data, "fetched_time"):
+                return None
+            else:
+                product_data["updated_at"] = product_data.pop("fetched_time")
+                return self.products.update_one({"_id": product_data["_id"]}, {"$set": product_data}, upsert=True).upserted_id # Check if product existed -> overwrite <> Handle duplicated data
 
     def insert_many_products(self, product_data):
         futures = []
@@ -49,9 +60,12 @@ class ShopeeCrawlerDB:
                 for product in product_data:
                     futures.append(executor.submit(self.insert_one_product, product))
 
-            return [future.result() for future in concurrent.futures.as_completed(futures)]
+            return [future.result() for future in concurrent.futures.as_completed(futures) if future.result() is not None]
         except TypeError:
             return []
-        
-    def find_all(self):
-        return self.products.find({})
+
+    def find_one_by_id(self, product_id) -> dict:
+        return self.products.find_one({"_id": product_id})
+
+    def is_same(product_old, product_new, key_ignore) -> bool:
+        return all(product_old[key] == product_new[key] for key in product_old.keys() if key != key_ignore)

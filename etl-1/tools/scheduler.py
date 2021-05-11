@@ -56,11 +56,11 @@ def run_job(now=False, _id=None):
     if _id is None:
         if now:
             for job in scheduler.get_jobs(jobstore="mongo"):
-                job.modify(next_run_time=datetime.now())
+                job.modify(next_run_time=datetime.timestamp(datetime.utcnow()))
     else:
         if now:
             job = scheduler.get_jobs(jobstore="mongo", _id=_id)
-            job.modify(next_run_time=datetime.now())
+            job.modify(next_run_time=datetime.timestamp(datetime.utcnow()))
 
     scheduler.start()
     while True:

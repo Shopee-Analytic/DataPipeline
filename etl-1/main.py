@@ -21,7 +21,6 @@ def main(args):
                 add_job(file)
         except Exception:
             add_job()
-
     elif "run_job" in args:
         if "now" in args:
             run_job(now=True)
