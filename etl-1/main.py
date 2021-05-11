@@ -2,7 +2,7 @@ from scheduler import run_job, add_job, remove_job
 import sys
 
 
-# docker compose run scheduler --entrypoint -d \
+# docker compose run scheduler -d --entrypoint \
 
 # add_job \
 # add_job <yml file> \ 
