@@ -2,7 +2,7 @@ from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.jobstores.mongodb import MongoDBJobStore
 from apscheduler.executors.pool import ThreadPoolExecutor
 import time
-from datetime import datetime, timedelta
+from datetime import datetime
 import logging
 from data.mongodb import get_client
 from tools.worker import crawl_and_insert
@@ -41,7 +41,7 @@ def add_job(file="config.yml"):
                 hours=6,
                 name=name,
                 id=name,
-                start_date=(datetime.now()+timedelta(minutes=1)).strftime("%Y-%m-%d %H:%M:%S"),
+                start_date=datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
                 jobstore="mongo",
                 replace_existing=True
             )
@@ -55,11 +55,11 @@ def run_job(now=False, _id=None):
     if _id is None:
         if now:
             for job in scheduler.get_jobs(jobstore="mongo"):
-                job.modify(next_run_time=datetime.timestamp(datetime.utcnow()))
+                job.modify(next_run_time=datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
     else:
         if now:
             job = scheduler.get_jobs(jobstore="mongo", _id=_id)
-            job.modify(next_run_time=datetime.timestamp(datetime.utcnow()))
+            job.modify(next_run_time=datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
     while True:
         try:
             time.sleep(1)

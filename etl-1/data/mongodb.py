@@ -68,4 +68,4 @@ class ShopeeCrawlerDB:
 
     @staticmethod
     def is_same(product_old, product_new, key_ignore: list) -> bool:
-        return all(product_old[key] == product_new[key] for key in product_old.keys() if key in key_ignore)
+        return all(product_old[key] == product_new[key] for key in product_old.keys() if key not in key_ignore)
