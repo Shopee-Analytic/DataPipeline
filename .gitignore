@@ -135,3 +135,6 @@ unittest.py
 log/
 test/
 *.bat
+
+# Log of ETL
+*/logs

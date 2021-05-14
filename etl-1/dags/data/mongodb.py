@@ -4,6 +4,7 @@ import concurrent.futures
 import logging
 from random import uniform
 import time
+import os
 
 
 logging.basicConfig(level=logging.DEBUG)
@@ -11,7 +12,7 @@ logger = logging.getLogger(__name__)
 
 def retry_getclient_with_backoff(retries=4, backoff_in_seconds=1):
     def rwb(get_client):
-        def wrapper(role='read_and_write'):
+        def wrapper(role):
             x = 0
             while True:
                 try:
@@ -29,7 +30,7 @@ def retry_getclient_with_backoff(retries=4, backoff_in_seconds=1):
 
 @retry_getclient_with_backoff()
 def get_client(role):
-    with open("config/db-config.yml") as f:
+    with open(f"{os.getcwd()}/dags/config/db-config.yml") as f:
         data = yaml.load(f, Loader=yaml.FullLoader)
         client = data['mongo'][role]
     return pymongo.MongoClient(client['url'])
@@ -55,7 +56,7 @@ class ShopeeCrawlerDB:
     def insert_many_products(self, product_data):
         futures = []
         try:
-            with concurrent.futures.ThreadPoolExecutor(max_workers=20) as executor:
+            with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
                 for product in product_data:
                     futures.append(executor.submit(self.insert_one_product, product))
 

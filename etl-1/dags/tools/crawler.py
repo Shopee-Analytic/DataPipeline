@@ -31,7 +31,7 @@ def crawl(link, newest):
     category_id = get_category_id(link)
     url = get_url(category_id, newest)
     data = get_data(url)
-    return select_properties(data)
+    return data
 
 def get_category_id(url_of_category) -> int:
     return re.search(r'https://shopee.vn/.+-cat.(\d+)', url_of_category).group(1)
@@ -44,7 +44,7 @@ def get_url(category_id, newest) -> str:
 def get_data(url) -> dict:
     return requests.get(url, headers={"content-type": "text"}, timeout=10).json()
 
-def select_properties(new_data) -> dict:  # data = [{}, {}, {}, ...]
+def select_properties(new_data):  # data = [{}, {}, {}, ...]
     data = []
     try:
         items = new_data["items"]
