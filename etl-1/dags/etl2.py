@@ -8,7 +8,6 @@ import os
 import yaml
 from datetime import timedelta
 from random import randint
-import concurrent.futures
 
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
@@ -69,12 +68,11 @@ def airflow_etl_2():
         )
 
         extract_task >> transform_task >> load_task
-        
-    with concurrent.futures.ThreadPoolExecutor(max_workers=3) as executor:
-        for link in links:
-            for page in range(0, pages, 1):
-                executor.submit(etl, link, page)
-    
+
+    for link in links:
+        for page in range(0, pages, 1):
+            etl(link, page)
+
 
 
 

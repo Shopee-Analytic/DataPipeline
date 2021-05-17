@@ -8,7 +8,6 @@ import os
 import yaml
 from datetime import timedelta
 from random import randint
-import concurrent.futures
 
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
@@ -23,11 +22,11 @@ DEFAULT_ARGS = {
     }
 
 # [START dag_decorator_usage]
-@dag(default_args=DEFAULT_ARGS, schedule_interval=None, start_date=days_ago(0), tags=['datapipeline-etl_1'], concurrency=randint(5, 10), default_view='graph') # 
+@dag(default_args=DEFAULT_ARGS, schedule_interval=None, start_date=days_ago(0), tags=['datapipeline-etl_1'], concurrency=randint(5, 10), max_active_runs=randint(10, 20), default_view='graph') # 
 def airflow_etl():
     DATALAKE = ShopeeCrawlerDB(role='read_and_write')
 
-    @task(retries=3, retry_exponential_backoff=True, task_concurrency=3)
+    @task(retries=3, retry_exponential_backoff=True)
     def extract(link, page):
         return crawler.crawl(link=link, newest=page*100)
     
@@ -52,11 +51,9 @@ def airflow_etl():
     
     for link in links:
         for page in range(0, pages, 1):
-            with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
-                futures = []
-                _id = f"{page}-{link.split('.')[-1]}"
-                with TaskGroup(_id, tooltip="Tasks for section"):
-                    futures.append(executor.submit(etl, link, page))
+            _id = f"{page}-{link.split('.')[-1]}"
+            with TaskGroup(_id, tooltip="Tasks for section"):
+                etl(link, page)
 
     # a link -> a job
     # a job contains 3 tasks(steps): extract -> transform -> load
