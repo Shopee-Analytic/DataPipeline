@@ -18,7 +18,7 @@ def retry_getclient_with_backoff(retries=4, backoff_in_seconds=1):
                 try:
                     return get_client(role)
                 except:
-                    if x == retries:
+                    if x == retries:    
                         raise
                     else:
                         sleep = (backoff_in_seconds * 2 ** x +
@@ -36,37 +36,37 @@ def get_client(role):
     return pymongo.MongoClient(client['url'])
 
 # Version 1 - Data in 1 collection
-class ShopeeCrawlerDB:
+class DataLake:
     def __init__(self, role='read_and_write'):
         client = get_client(role)
         mydb = client['ShopeeCrawler']
         self.products = mydb['shopee']
 
+    def create_index(self, indexes: list):
+        for index in indexes:
+            self.products.create_index(
+                [
+                (index['key'], index['index_type']), 
+
+                ])
+
     def insert_one_product(self, product_data):
-        product = self.find_one_by_id(product_id=product_data['_id'])
-        if product is None:
-            return self.products.insert_one(product_data).inserted_id
-        else:
-            if self.is_same(product, product_data, ("fetched_time", "updated_at")):
-                return None
-            else:
-                product_data["updated_at"] = product_data.pop("fetched_time")
-                return self.products.update_one({"_id": product_data["_id"]}, {"$set": product_data}, upsert=True).upserted_id # Check if product existed -> overwrite <> Handle duplicated data
+        return self.products.insert_one(product_data).inserted_id
 
     def insert_many_products(self, product_data):
-        futures = []
-        try:
-            with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
-                for product in product_data:
-                    futures.append(executor.submit(self.insert_one_product, product))
+        ids = []
+        for _id in self.products.insert_many(product_data).inserted_ids:
+            ids.append(str(_id))
 
-            return [future.result() for future in concurrent.futures.as_completed(futures) if future.result() is not None]
-        except TypeError:
-            return []
+        return ids
 
     def find_one_by_id(self, product_id) -> dict:
-        return self.products.find_one({"_id": product_id})
+        return self.products.find_one({"product_id": product_id})
 
-    @staticmethod
-    def is_same(product_old, product_new, key_ignore: list) -> bool:
-        return all(product_old[key] == product_new[key] for key in product_old.keys() if key not in key_ignore)
+if __name__ == "__main__":
+    indexes = [
+        {"key": "_id", "index_type": 1},
+        {"key": "fetched_time", "index_type": -1},
+        {"key": "updated_at", "index_type": -1}
+    ]
+    DataLake(role='read_and_write').create_index(indexes=indexes)

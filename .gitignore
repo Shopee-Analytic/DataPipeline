@@ -137,4 +137,7 @@ test/
 *.bat
 
 # Log of ETL
-*/logs
+/logs
+
+# Temp data csv
+dags/data/csv
