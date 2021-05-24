@@ -1,3 +1,4 @@
+from asyncio.log import logger
 import yaml
 from psycopg2.pool import SimpleConnectionPool
 from random import uniform
@@ -44,11 +45,10 @@ def get_pool(role):
     )
 
 class DataWareHouse:
-
-    def __init__(self, role='airflow'):
+    def __init__(self, role='admin'):
+        self.VERSION = "v6"
         self.role = role
         self.open_pool()
-        self.VERSION = "v6"
     def open_pool(self):
         try:
             self.pool = get_pool(self.role)
@@ -59,7 +59,7 @@ class DataWareHouse:
     @contextmanager
     def get_cursor(self):
         con = self.pool.getconn()
-        con.set_session(autocommit=True) # readonly
+        con.set_session(autocommit=True)
         try:
             yield con.cursor()
         finally:
@@ -101,4 +101,5 @@ class DataWareHouse:
 
 if __name__ == "__main__":
     path = "dags\data\command\create_table.sql"
+    logger.info("RE-CREATE SCHEMA")
     DataWareHouse(role='admin').exec(path)

@@ -60,6 +60,7 @@ CREATE TABLE IF NOT EXISTS product_quantity (
 CREATE TABLE IF NOT EXISTS product_time (
     product_id BIGINT,
     fetched_time FLOAT8,
+    updated_at FLOAT8,
     day SMALLINT,
     month SMALLINT,
     year SMALLINT,
