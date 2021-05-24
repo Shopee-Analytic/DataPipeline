@@ -4,7 +4,7 @@ from airflow.utils.dates import days_ago
 
 from tools import worker2
 
-from datetime import timedelta, datetime
+from datetime import timedelta
 from random import randint
 import os
 
@@ -21,19 +21,25 @@ DEFAULT_ARGS = {
     'retries': 3,
     'retry_delay': timedelta(seconds=5),
     'trigger_rule': 'one_success',
-    'wait_for_downstream': False
-    }
+    'wait_for_downstream': False,
+    'start_date': days_ago(0),
+    'tags': ['datapipeline'],
+    'concurrency': randint(5, 7),
+    # 'schedule_interval': "9 0 * * *",
+    'schedule_interval': None,
+    'default_view': 'graph'
+}
 
 # [START dag_decorator_usage]
-@dag(default_args=DEFAULT_ARGS, schedule_interval=None, start_date=days_ago(0), tags=['datapipeline'], concurrency=randint(5, 7), default_view='graph') # 
+@dag(default_args=DEFAULT_ARGS) # 
 def etl_2():
     @task(retries=3, retry_exponential_backoff=True)
     def extract_shop(last_run):
         return worker2.extract_distinct_shop(last_run)
     
     @task(depends_on_past=True, retries=3, retry_exponential_backoff=True)
-    def extract_product(shop_id, last_run):
-        return worker2.extract_product_from_shop(shop_id, last_run)
+    def extract_product(shop_ids, last_run):
+        return worker2.extract_product_from_shops(shop_ids, last_run)
 
     @task(depends_on_past=True, retries=3, retry_exponential_backoff=True)
     def transform(extracted_product):
@@ -43,24 +49,22 @@ def etl_2():
     def load(transformed_data):
         return worker2.load(transformed_data)
 
-    def etl(last_run):
-        extracted_shop_ids = extract_shop(last_run=last_run)
-
-        for shop_id in extracted_shop_ids:
-            extracted_product = extract_product(shop_id, last_run)
-            transformed_data = transform(extracted_product=extracted_product)
-            load(transformed_data=transformed_data)
-
-    def last_time_run(dag_id='etl_1'):
-        dag_runs = DagRun.find(dag_id=dag_id)
-        dag_runs.sort(key=lambda x: x.execution_date, reverse=True)
-        return float(datetime.timestamp(dag_runs[0].execution_date))
-
+    def etl(shop_ids, last_run):
+        extracted_product = extract_product(shop_ids, last_run)
+        transformed_data = transform(extracted_product=extracted_product)
+        load(transformed_data=transformed_data)
     
-    etl(last_time_run())
+
+    last_run = 1621428701
+    limit = 10
+    shop_ids = extract_shop(last_run=last_run)
+    
+    # for i in range(0, len(shop_ids), limit):
+        # etl(shop_ids[i:i+limit], last_run)
+    etl(shop_ids, last_run)
 
     # a link -> a job
     # a job contains 3 tasks(steps): extract -> transform -> load
 
-dag = etl_2()
+# dag2 = etl_2()
 # [END dag_decorator_usage]
