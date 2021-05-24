@@ -104,4 +104,5 @@ if __name__ == "__main__":
                 futures.append(executor.submit(etl, link, page))
 
     for future in concurrent.futures.as_completed(futures):
-        logger.info(future.result())
+        logger.info(len(future.result()))
+        
