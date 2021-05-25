@@ -96,7 +96,18 @@ class DataWareHouse:
             return True
         except Exception as e:
             raise e
-
+    
+    def save_to_csv(self, output_filename: str, command: str):
+        try:
+            outputquery = "COPY ({0}) TO STDOUT WITH CSV HEADER DELIMITER ';'".format(command)
+            with self.get_cursor() as cur:
+                file_path = f'{os.getcwd()}/{output_filename}.csv'
+                with open(file_path, 'w', encoding='utf-8') as f:
+                    cur.copy_expert(outputquery, f)
+            return f"File successfully saved at: '{file_path}'"
+        except Exception as e:
+            print(e)
+            return None
 
 if __name__ == "__main__":
     path = "dags\data\command\create_table.sql"
