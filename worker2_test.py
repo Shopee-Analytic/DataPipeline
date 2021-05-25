@@ -16,7 +16,7 @@ logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
 
-DELIMITER = "@"
+DELIMITER = ";"
 
 def extract_distinct_shop(last_run) -> list:
     DL = DataLake(role='read_only')
@@ -34,24 +34,26 @@ def extract(last_run: float) -> list:
     DL = DataLake(role='read_only')
     return list(DL.products.find({'fetched_time': {'$gte': last_run}}, {"_id": 0}).sort([('fetched_time', -1), ('updated_at', -1)]))
 
-def transform(extracted_product: dict) -> list:
+def transform(extracted_product: list) -> list:
     path = os.getcwd()+ "/dags/data/csv/"
     INDEXING = False
-    df = pd.DataFrame(extracted_product).astype(str).drop_duplicates()
 
+    # Data pre-processing
+    df = pd.DataFrame(extracted_product)
+    df["product_price"] = df["product_price"].div(100000)
+    df.astype(str).drop_duplicates(inplace=True, keep='first')
+    df.replace(r';',  ',', regex=True, inplace=True)
+    df.replace(r'\n',  ' ', regex=True, inplace=True)
+    
     def transform_general(keys: list, table_name: str, sub_name: str="", strip_key: list=[], expand: dict={}, expand_inplace: bool=False) -> dict: 
-        file_name = f"{table_name}"
-        if sub_name != "":
-            file_name += f"_{sub_name}.csv"
-        else:
-            file_name += ".csv"
+        file_name = f"{table_name}{sub_name}.csv"
         file_path = path + file_name
         
+        # data proccessing
         data = df.filter(items=keys).astype(str).drop_duplicates()
-
         for key in strip_key:
-            data[key] = data[key].str.replace(" ", "")
-
+            data[key].replace({r'\s+$': '', r'^\s+': ''}, regex=True, inplace=True)
+            data[key].replace(' ',  '', regex=True, inplace=True)
         if expand:
             keys.extend(expand['new_key'])
             if table_name == "product_rating":
@@ -70,6 +72,7 @@ def transform(extracted_product: dict) -> list:
             if expand_inplace:
                 data.drop(columns=expand['old_key'], inplace=expand_inplace)
                 keys.remove(expand['old_key'])
+
 
         data.to_csv(file_path, index=INDEXING, sep=DELIMITER)
         return {'file_path': file_path, 'table_name': table_name, 'keys': keys}
@@ -128,40 +131,21 @@ def load(transformed_data):
             except psycopg2.errors.UniqueViolation as e:
                 logger.error(e)
                 continue
-            finally:
+            else:
                 os.remove(file_path)
+                # pass
+            finally:
+                # os.remove(file_path)
+                pass
         return True
     except Exception as e:
         logger.error(e)
         raise e
 
 if __name__ == "__main__":
-    last_run = 1621505402.224548
-
-    # shop_ids = extract_distinct_shop(last_run)
-
-    # print(len(shop_ids))
-
-    # def etl(shop_id, last_run):
-    #     products = extract_product_from_shop(shop_id, last_run)
-    #     print(len(products))
-    #     transformed = transform(products)
-    #     loading = load(transformed)
-    #     print(loading)
-
-    # for shop_id in shop_ids:
-        # etl(shop_id, last_run)
-
-    # def etl(last_run):
-    #     products = extract(last_run)
-    #     print(len(products))
-    #     transformed = transform(products)
-    #     loads = load(transformed)
-    #     print(loads)
-
-    # etl(last_run)
-
+    last_run = 1621428701.224548
     shop_ids = extract_distinct_shop(last_run)
+
     def etl(shop_ids, last_run):
         products = extract_product_from_shops(shop_ids, last_run)
         print(len(products))
@@ -171,6 +155,6 @@ if __name__ == "__main__":
 
     a = len(shop_ids)
     print(a)
-    limit = 10
+    limit = 1000
     for i in range(0, a, limit):
         etl(shop_ids[i:i+limit], last_run)

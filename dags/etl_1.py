@@ -21,15 +21,10 @@ DEFAULT_ARGS = {
     'retry_delay': timedelta(seconds=5),
     'trigger_rule': 'one_success',
     'wait_for_downstream': False,
-    'start_date': days_ago(0),
-    'tags': ['datapipeline'],
-    'concurrency': randint(5, 7),
-    'schedule_interval': "9 0 * * *",
-    'default_view': 'graph'
 }
 
 # [START dag_decorator_usage]
-@dag(default_args=DEFAULT_ARGS)
+@dag(default_args=DEFAULT_ARGS, tags=['datapipeline'], start_date=days_ago(1), schedule_interval="9 0 * * *", concurrency=randint(5, 7), default_view='graph')
 def etl_1():
 
     @task(retries=3, retry_exponential_backoff=True)
@@ -44,7 +39,7 @@ def etl_1():
     def load(transformed_data):
         return worker1.load(transformed_data)
 
-    def etl(link, page):
+    def etl(link: str, page: int):
         extracted_data = extract(link, page)
         transformed_data = transform(extracted_data)
         load(transformed_data)

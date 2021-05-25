@@ -4,7 +4,7 @@ from airflow.utils.dates import days_ago
 
 from tools import worker2
 
-from datetime import timedelta
+from datetime import timedelta, datetime
 from random import randint
 import os
 
@@ -22,16 +22,10 @@ DEFAULT_ARGS = {
     'retry_delay': timedelta(seconds=5),
     'trigger_rule': 'one_success',
     'wait_for_downstream': False,
-    'start_date': days_ago(0),
-    'tags': ['datapipeline'],
-    'concurrency': randint(5, 7),
-    # 'schedule_interval': "9 0 * * *",
-    'schedule_interval': None,
-    'default_view': 'graph'
 }
 
 # [START dag_decorator_usage]
-@dag(default_args=DEFAULT_ARGS) # 
+@dag(default_args=DEFAULT_ARGS, tags=['datapipeline'], start_date=days_ago(1), schedule_interval="10 0 * * *", concurrency=randint(5, 7), default_view='graph')
 def etl_2():
     @task(retries=3, retry_exponential_backoff=True)
     def extract_shop(last_run):
@@ -54,17 +48,21 @@ def etl_2():
         transformed_data = transform(extracted_product=extracted_product)
         load(transformed_data=transformed_data)
     
+    def get_most_recent_dag_run(dag_id='etl_1'):
+        dag_runs = DagRun.find(dag_id=dag_id)
+        dag_runs.sort(key=lambda x: x.execution_date, reverse=True)
+        return datetime.timestamp(dag_runs[0].execution_date) if dag_runs else None
 
-    last_run = 1621428701
-    limit = 10
-    shop_ids = extract_shop(last_run=last_run)
-    
+    last_run = get_most_recent_dag_run()
+    if last_run:
+        shop_ids = extract_shop(last_run=last_run)
+        etl(shop_ids, last_run)
     # for i in range(0, len(shop_ids), limit):
         # etl(shop_ids[i:i+limit], last_run)
-    etl(shop_ids, last_run)
+    
 
     # a link -> a job
     # a job contains 3 tasks(steps): extract -> transform -> load
 
-# dag2 = etl_2()
+dag2 = etl_2()
 # [END dag_decorator_usage]

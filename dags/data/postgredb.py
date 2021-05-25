@@ -1,6 +1,5 @@
-from asyncio.log import logger
 import yaml
-from psycopg2.pool import SimpleConnectionPool
+from psycopg2.pool import ThreadedConnectionPool
 from random import uniform
 import time
 from contextlib import contextmanager
@@ -35,7 +34,7 @@ def retry_getpool_with_backoff(retries=4, backoff_in_seconds=1):
 @retry_getpool_with_backoff()
 def get_pool(role):
     params = config(role=role)
-    return SimpleConnectionPool(
+    return ThreadedConnectionPool(
         minconn = 1,
         maxconn = 5,
         host = params['host'],
@@ -85,7 +84,7 @@ class DataWareHouse:
             db_version = cur.fetchone()
             print(db_version)
     
-    def copy_data_by_csv(self, file_path, table_name, keys, delimiter):
+    def copy_data_by_csv(self, file_path: str, table_name: str, keys: list, delimiter: str):
         try:
             with self.get_cursor() as cur:
                 try:
@@ -101,5 +100,4 @@ class DataWareHouse:
 
 if __name__ == "__main__":
     path = "dags\data\command\create_table.sql"
-    logger.info("RE-CREATE SCHEMA")
     DataWareHouse(role='admin').exec(path)
