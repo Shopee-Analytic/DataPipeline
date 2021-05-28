@@ -1,6 +1,5 @@
 import pymongo
 import yaml
-import concurrent.futures
 import logging
 from random import uniform
 import time
@@ -39,8 +38,8 @@ def get_client(role):
 class DataLake:
     def __init__(self, role='read_and_write'):
         client = get_client(role)
-        mydb = client['ShopeeCrawler']
-        self.products = mydb['shopee']
+        self.mydb = client['ShopeeCrawler']
+        self.products = self.mydb['shopee']
 
     def create_index(self, indexes: list):
         for index in indexes:
@@ -62,10 +61,22 @@ class DataLake:
     def find_one_by_id(self, product_id) -> dict:
         return self.products.find_one({"product_id": product_id})
 
+    def find_duplicates(self):
+        return list(self.products.aggregate([
+            {"$group" : { "_id": "$product_id", "count": { "$sum": 1 } } },
+            {"$match": {"_id" :{ "$ne" : 'null' } , "count" : {"$gt": 1} } }, 
+            {"$project": {"product_id" : "$_id", "_id" : 0} }
+        ]))
 if __name__ == "__main__":
     indexes = [
         {"key": "_id", "index_type": 1},
         {"key": "fetched_time", "index_type": -1},
         {"key": "updated_at", "index_type": -1}
     ]
-    DataLake(role='read_and_write').create_index(indexes=indexes)
+    DL = DataLake(role='read_and_write')
+    # DL.products.drop()
+    # DL.create_index(indexes=indexes)
+    print(len(list(DL.products.find().distinct('product_id'))))
+    # print(DL.find_duplicates())
+
+    

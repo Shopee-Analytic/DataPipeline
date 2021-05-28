@@ -47,7 +47,7 @@ def extract(link: str, newest: int):
     data = get_data(url)
     return data
 
-def transform(new_data: dict) -> list:  # data = [{}, {}, {}, ...]
+def transform(new_data):  # data = [{}, {}, {}, ...]
     data = []
     try:
         items = new_data['items']
@@ -60,17 +60,26 @@ def transform(new_data: dict) -> list:  # data = [{}, {}, {}, ...]
                     'product_image': r'https://cf.shopee.vn/file/{}_tn'.format(item['image']),
                     'product_link': r'https://shopee.vn/{}-i.{}.{}'.format(item['name'], item['shopid'], item['itemid']),
                     'category_id': item['catid'],
-                    'product_price': item['price'],
+                    'label_ids': item['label_ids'],
+                    'product_brand': item['brand'],
+                    'product_price': item['price_before_discount'],
                     'product_discount': item['raw_discount'],
                     'currency': item['currency'],
                     'stock': item['stock'],
                     'sold': item['sold'],
+                    'is_on_flash_sale': item['is_on_flash_sale'],
                     'rating_star': item['item_rating']['rating_star'],
                     'rating_count': item['item_rating']['rating_count'],
+                    'rating_with_context': item['item_rating']['rcount_with_context'],
+                    'rating_with_image': item['item_rating']['rcount_with_image'],
+                    'is_freeship': item['show_free_shipping'],
                     'feedback_count': item['cmt_count'],
+                    'liked_count': item['liked_count'],
+                    'view_count': item['view_count'],
                     'shop_id': item['shopid'],
                     'shop_location': item['shop_location'],
                     'shopee_verified': item['shopee_verified'],
+                    'is_official_shop': item['is_official_shop'],
                     'updated_at': item['ctime'],
                     'fetched_time': datetime.timestamp(datetime.utcnow())
                 }
@@ -82,3 +91,4 @@ def transform(new_data: dict) -> list:  # data = [{}, {}, {}, ...]
 def load(transformed_data: list):
     datalake = DataLake(role='read_and_write')
     return datalake.insert_many_products(transformed_data)
+      

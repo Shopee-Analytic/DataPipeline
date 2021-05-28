@@ -45,7 +45,7 @@ def get_pool(role):
 
 class DataWareHouse:
     def __init__(self, role='admin'):
-        self.VERSION = "v6"
+        self.VERSION = "v7"
         self.role = role
         self.open_pool()
     def open_pool(self):

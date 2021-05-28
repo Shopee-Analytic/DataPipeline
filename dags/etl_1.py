@@ -28,8 +28,8 @@ DEFAULT_ARGS = {
 def etl_1():
 
     @task(retries=3, retry_exponential_backoff=True)
-    def extract(link, page):
-        return worker1.extract(link=link, newest=page*100)
+    def extract(link, newest):
+        return worker1.extract(link=link, newest=newest)
     
     @task(depends_on_past=True, retries=3, retry_exponential_backoff=True)
     def transform(extracted_data):
@@ -40,7 +40,7 @@ def etl_1():
         return worker1.load(transformed_data)
 
     def etl(link: str, page: int):
-        extracted_data = extract(link, page)
+        extracted_data = extract(link, newest=page*100)
         transformed_data = transform(extracted_data)
         load(transformed_data)
 

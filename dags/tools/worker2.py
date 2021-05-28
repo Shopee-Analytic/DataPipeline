@@ -23,11 +23,11 @@ def extract_distinct_shop(last_run) -> list:
 
 def extract_product_from_shop(shop_id: int, last_run) -> list:
     DL = DataLake(role='read_only')
-    return list(DL.products.find({'fetched_time': {'$gte': last_run}, 'shop_id': shop_id}, {"_id": 0}).sort([('fetched_time', -1), ('updated_at', -1)]))
+    return list(DL.products.find({'fetched_time': {'$gte': last_run}, 'shop_id': shop_id}, {"_id": 0}, allow_disk_use=True).sort([('fetched_time', -1)]))
 
 def extract_product_from_shops(shop_ids: list, last_run) -> list:
     DL = DataLake(role='read_only')
-    return list(DL.products.find({'fetched_time': {'$gte': last_run}, 'shop_id': {'$in': shop_ids}}, {"_id": 0}).sort([('fetched_time', -1), ('updated_at', -1)]))
+    return list(DL.products.find({'fetched_time': {'$gte': last_run}, 'shop_id': {'$in': shop_ids}}, {"_id": 0}, allow_disk_use=True).sort([('fetched_time', -1)]))
 
 def extract(last_run: float) -> list:
     DL = DataLake(role='read_only')
@@ -44,7 +44,7 @@ def transform(extracted_product: list) -> list:
     df.replace(r';',  ',', regex=True, inplace=True)
     df.replace(r'\n',  ' ', regex=True, inplace=True)
     
-    def transform_general(keys: list, table_name: str, sub_name: str="", strip_key: list=[], expand: dict={}, expand_inplace: bool=False) -> dict: 
+    def transform_general(keys: list, table_name: str, sub_name: str="", strip_key: list=[], expand: dict={}, expand_inplace: bool=False, replace_column_value: list=[]) -> dict: 
         file_name = f"{table_name}{sub_name}.csv"
         file_path = path + file_name
         
@@ -53,14 +53,19 @@ def transform(extracted_product: list) -> list:
         for key in strip_key:
             data[key].replace({r'\s+$': '', r'^\s+': ''}, regex=True, inplace=True)
             data[key].replace(' ',  '', regex=True, inplace=True)
+
+        if replace_column_value:
+            def transform_column(x):
+                return x.replace(value['old_value'], value['new_value'])
+
+            for column in replace_column_value:
+                for column_name, values in column.items():
+                    for value in values:
+                        data[column_name] = data[column_name].apply(lambda x: pd.Series(transform_column(x)))
+
         if expand:
             keys.extend(expand['new_key'])
-            if table_name == "product_rating":
-                rows = data[expand['old_key']].apply(lambda x: pd.Series(list(int(i) for i in (x.replace(']', '').replace('[', '').replace(' ', '').split(','))))).drop(columns=[0])
-                for i,column in enumerate(rows):
-                    data[expand['new_key'][i]] = 0
-                    data[expand['new_key'][i]] = rows[column]
-            elif table_name == "product_time":
+            if table_name == "product_time":
                 def to_date(x) -> datetime:
                     return datetime.utcfromtimestamp(float(x))
                 old_cols = data[expand['old_key']]
@@ -77,29 +82,50 @@ def transform(extracted_product: list) -> list:
         return {'file_path': file_path, 'table_name': table_name, 'keys': keys}
 
     shop = transform_general(
-        keys = ["shop_id", "fetched_time", "shop_location", "shopee_verified"],
-        table_name = "shop"
+        keys = ["shop_id", "fetched_time", "shop_location", "shopee_verified", "is_official_shop"],
+        table_name = "shop",
+        replace_column_value = [
+            {'shopee_verified': [
+                {"old_value": "None", "new_value": 'False'}
+            ]},
+            {'is_official_shop': [
+                {"old_value": "None", "new_value": 'False'}
+            ]},
+        ]
     )
     product = transform_general(
-        keys = ["product_id", "fetched_time", "product_name", "product_image", "product_link", "category_id", "updated_at", "shop_id"],
+        keys = ["product_id", "fetched_time", "product_name", "product_image", "product_link", "updated_at", "shop_id"],
         table_name = "product",
         strip_key = ["product_image", "product_link"]
     )
+    product_brand = transform_general(
+        keys = ["product_id", "fetched_time", "product_brand", "category_id", "label_ids"],
+        table_name = "product_brand",
+        replace_column_value = [
+            {"label_ids": [
+                    {"old_value": "[", "new_value": "{"},
+                    {"old_value": "]", "new_value": "}"}
+                ]
+            }
+        ]
+    )
     product_price = transform_general(
-        keys = ["product_id", "fetched_time", "product_price", "product_discount", "currency"],
+        keys = ["product_id", "fetched_time", "product_price", "product_discount", "currency", "is_freeship", "is_on_flash_sale"],
         table_name= 'product_price'
     )
     product_rating = transform_general(
-        keys = ["product_id", "fetched_time", "rating_star", "rating_count"],
+        keys = ["product_id", "fetched_time", "rating_star", "rating_count" , "rating_with_context", "rating_with_image"],
         table_name = "product_rating",
-        expand = {
-            "old_key": 'rating_count',
-            "new_key": ["rating_count_1", "rating_count_2", "rating_count_3", "rating_count_4", "rating_count_5"]
-        },
-        expand_inplace = True
+        replace_column_value = [
+            {"rating_count": [
+                    {"old_value": "[", "new_value": "{"},
+                    {"old_value": "]", "new_value": "}"}
+                ]
+            }
+        ]
     )
     product_feedback = transform_general(
-        keys = ["product_id", "fetched_time", "feedback_count"],
+        keys = ["product_id", "fetched_time", "feedback_count", "liked_count", "view_count"],
         table_name = "product_feedback"
     )
     product_quantity = transform_general(
@@ -107,15 +133,15 @@ def transform(extracted_product: list) -> list:
         table_name = "product_quantity"
     )
     product_time = transform_general(
-        keys = ["product_id", "fetched_time", "updated_at"],
+        keys = ["product_id", "fetched_time"],
         table_name = "product_time",
         expand = {
-            "old_key": "updated_at",
+            "old_key": "fetched_time",
             "new_key": ["day", "month", "year", "datetime"]
         },
         expand_inplace = False
     )
-    return [shop, product, product_price, product_rating, product_feedback, product_quantity, product_time]
+    return [shop, product, product_brand, product_price, product_rating, product_feedback, product_quantity, product_time]
         
 def load(transformed_data):
     DWH = DataWareHouse(role='admin')
@@ -129,9 +155,10 @@ def load(transformed_data):
                 DWH.copy_data_by_csv(file_path=file_path, table_name=table_name, keys=keys, delimiter=DELIMITER)
             except psycopg2.errors.UniqueViolation as e:
                 logger.error(e)
-            finally:
+                continue
+            else:
                 os.remove(file_path)
+                pass
         return True
     except Exception as e:
         logger.error(e)
-        raise e
