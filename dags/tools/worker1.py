@@ -62,7 +62,7 @@ def transform(new_data):  # data = [{}, {}, {}, ...]
                     'category_id': item['catid'],
                     'label_ids': item['label_ids'],
                     'product_brand': item['brand'],
-                    'product_price': item['price_before_discount'],
+                    'product_price': item['price'] if item['raw_discount'] == 0 else item['price_before_discount'],
                     'product_discount': item['raw_discount'],
                     'currency': item['currency'],
                     'stock': item['stock'],

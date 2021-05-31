@@ -1,3 +1,5 @@
+from operator import index
+from shutil import ExecError
 import yaml
 from psycopg2.pool import ThreadedConnectionPool
 from random import uniform
@@ -108,7 +110,63 @@ class DataWareHouse:
         except Exception as e:
             print(e)
             return None
+    
+    def create_view(self):
+        
+        def create(view_name, command):
+            drop = f"DROP VIEW IF EXISTS {self.VERSION}.{view_name}"
+            sql = "CREATE VIEW {}.{} AS {}".format(self.VERSION, view_name, command)
+            try:
+                with self.get_cursor() as cur:
+                    cur.execute(drop)
+                    cur.execute(sql)
+                    print(f"Create view {view_name} successfully!")
+            except Exception as e:
+                print(e)
+                print(f"Failed to create view {view_name}!")
 
+        arr = [
+            {"view_name":  "tableView",
+            "command": f"""
+                select distinct on (product_id) product_name, product_image, product_link, product_brand, rating_star, rating_count, category_id, product_price, product_discount, product_price*(1-product_discount/100) as price_after_discount, currency, stock, sold, day, month, year
+                from {self.VERSION}.product
+                natural join {self.VERSION}.product_time
+                natural join {self.VERSION}.product_brand
+                natural join {self.VERSION}.product_rating
+                natural join {self.VERSION}.product_price
+                natural join {self.VERSION}.product_quantity
+                order by product_id asc, datetime desc, product_discount desc
+            """},
+            {"view_name": "productPriceView",
+            "command": f"""
+                SELECT * FROM 
+            """
+            }
+        ]
+
+        for e in arr:
+            create(e['view_name'], e['command'])
+
+
+    def create_index(self):
+        def create(index_name, table_name, columns):
+            drop = f"DROP INDEX IF EXISTS {self.VERSION}.{index_name};"
+            sql = f"CREATE INDEX {index_name} ON {self.VERSION}.{table_name} ({', '.join(map(str, columns))});"
+            try:
+                with self.get_cursor() as cur:
+                    cur.execute(drop)
+                    cur.execute(sql)
+                    print(f"Create index {index_name} on {table_name} successfully!")
+            except Exception as e:
+                print(e)    
+                print(f"Failed to create index {index_name} on {table_name}!")
+        
+        create(index_name="product_id_index", table_name="product", columns=['product_id', 'fetched_time'])
+        create(index_name="product_time_index", table_name="product_time", columns=['day', 'month'])
 if __name__ == "__main__":
     path = "dags\data\command\create_table.sql"
     DataWareHouse(role='admin').exec(path)
+    DW = DataWareHouse()
+    # DW.create_index()
+    # DW.create_view()
+    

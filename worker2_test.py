@@ -23,7 +23,7 @@ def extract_distinct_shop(last_run) -> list:
 
 def extract_product_from_shop(shop_id: int, last_run) -> list:
     DL = DataLake(role='read_only')
-    return list(DL.products.find({'fetched_time': {'$gte': last_run}, 'shop_id': shop_id}, {"_id": 0}, allow_disk_use=True).sort([('fetched_time', -1)]))
+    return list(DL.products.find({'fetched_time': {'$gte': last_run}, 'shop_id': shop_id}, {"_id": 0}, allow_disk_use=True).distinct('shop_id', 'fetched_time').sort([('fetched_time', -1)]))
 
 def extract_product_from_shops(shop_ids: list, last_run) -> list:
     DL = DataLake(role='read_only')
@@ -44,7 +44,7 @@ def transform(extracted_product: list) -> list:
     df.replace(r';',  ',', regex=True, inplace=True)
     df.replace(r'\n',  ' ', regex=True, inplace=True)
     
-    def transform_general(keys: list, table_name: str, sub_name: str="", strip_key: list=[], expand: dict={}, expand_inplace: bool=False, replace_column_value: list=[]) -> dict: 
+    def transform_general(keys: list, table_name: str, sub_name: str="", normalize_key: dict={}, strip_key: list=[], expand: dict={}, expand_inplace: bool=False, replace_column_value: list=[], special_key: str="") -> dict: 
         file_name = f"{table_name}{sub_name}.csv"
         file_path = path + file_name
         
@@ -53,6 +53,21 @@ def transform(extracted_product: list) -> list:
         for key in strip_key:
             data[key].replace({r'\s+$': '', r'^\s+': ''}, regex=True, inplace=True)
             data[key].replace(' ',  '', regex=True, inplace=True)
+
+        if normalize_key:
+            
+            for key, value in normalize_key.items():
+                try:
+                    if value is int:
+                        data[key] = data[key].apply(lambda x: pd.Series(int(float(x)) if x.lower() != "nan" else 0))
+                    elif value is float:
+                        data[key] = data[key].apply(lambda x: pd.Series(float(x) if x.lower() != "nan" else 0))
+                    elif value is str:
+                        data[key] = data[key].apply(lambda x: pd.Series(str(x)))
+                    elif value is bool:
+                        data[key] = data[key].apply(lambda x: pd.Series(bool(x)) if x else False)
+                except Exception as e:
+                    print(e)
 
         if replace_column_value:
             def transform_column(x):
@@ -76,6 +91,9 @@ def transform(extracted_product: list) -> list:
             if expand_inplace:
                 data.drop(columns=expand['old_key'], inplace=expand_inplace)
                 keys.remove(expand['old_key'])
+        if special_key != "":
+            if special_key == "product_brand":
+                data[special_key] = data[special_key].apply(lambda x: pd.Series(x if x else "No Brand"))
 
 
         data.to_csv(file_path, index=INDEXING, sep=DELIMITER)
@@ -89,7 +107,8 @@ def transform(extracted_product: list) -> list:
                 {"old_value": "None", "new_value": 'False'}
             ]},
             {'is_official_shop': [
-                {"old_value": "None", "new_value": 'False'}
+                {"old_value": "None", "new_value": 'False'},
+                {"old_value": "nan", "new_value": 'False'},
             ]},
         ]
     )
@@ -104,14 +123,30 @@ def transform(extracted_product: list) -> list:
         replace_column_value = [
             {"label_ids": [
                     {"old_value": "[", "new_value": "{"},
-                    {"old_value": "]", "new_value": "}"}
+                    {"old_value": "]", "new_value": "}"},
+                    {"old_value": "nan", "new_value": "{}"},
                 ]
-            }
-        ]
+            },
+            {"product_brand": [
+                    {"old_value": "None", "new_value": "No Brand"},
+                    {"old_value": "Nan", "new_value": "No Brand"}
+            ]}
+        ],
+        special_key = "product_brand"
     )
     product_price = transform_general(
         keys = ["product_id", "fetched_time", "product_price", "product_discount", "currency", "is_freeship", "is_on_flash_sale"],
-        table_name= 'product_price'
+        table_name= 'product_price',
+        replace_column_value = [
+            {"is_freeship": [
+                    {"old_value": "nan", "new_value": "False"},
+                ]
+            },
+            {"is_on_flash_sale": [
+                    {"old_value": "nan", "new_value": "False"},
+                ]
+            },
+        ]
     )
     product_rating = transform_general(
         keys = ["product_id", "fetched_time", "rating_star", "rating_count" , "rating_with_context", "rating_with_image"],
@@ -122,15 +157,18 @@ def transform(extracted_product: list) -> list:
                     {"old_value": "]", "new_value": "}"}
                 ]
             }
-        ]
+        ],
+        normalize_key={"rating_with_context": int, "rating_with_image": int, "rating_star": float}
     )
     product_feedback = transform_general(
         keys = ["product_id", "fetched_time", "feedback_count", "liked_count", "view_count"],
-        table_name = "product_feedback"
+        table_name = "product_feedback",
+        normalize_key={"liked_count": int, "view_count": int}
     )
     product_quantity = transform_general(
         keys = ["product_id", "fetched_time", "sold", 'stock'],
-        table_name = "product_quantity"
+        table_name = "product_quantity",
+        normalize_key={"sold": int, "stock": int}
     )
     product_time = transform_general(
         keys = ["product_id", "fetched_time"],
@@ -165,11 +203,16 @@ def load(transformed_data):
         return True
     except Exception as e:
         print(e)
+        return False
+
+def create_view_and_index():
+    DWH = DataWareHouse(role='admin')
+    DWH.create_view()
+    DWH.create_index()
 
 if __name__ == "__main__":
-    last_run = 1622101129.284765
+    last_run = 0
     shop_ids = extract_distinct_shop(last_run)
-
     def etl(shop_ids, last_run):
         products = extract_product_from_shops(shop_ids, last_run)
         print("number of product", len(products))
@@ -179,8 +222,10 @@ if __name__ == "__main__":
 
     a = len(shop_ids)
     print("Number of shops: ", a)
-    limit = 1000
+    limit = 50
     for i in range(0, a, limit):
         shops = shop_ids[i:i+limit]
         print(f"{i}. Number of shop: ", len(shops))
         etl(shops, last_run)
+    # etl(shop_ids=shop_ids, last_run=last_run)
+    create_view_and_index()

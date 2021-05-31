@@ -74,8 +74,8 @@ if __name__ == "__main__":
         {"key": "updated_at", "index_type": -1}
     ]
     DL = DataLake(role='read_and_write')
-    # DL.products.drop()
-    # DL.create_index(indexes=indexes)
+    DL.products.drop()
+    DL.create_index(indexes=indexes)
     print(len(list(DL.products.find().distinct('product_id'))))
     # print(DL.find_duplicates())
 

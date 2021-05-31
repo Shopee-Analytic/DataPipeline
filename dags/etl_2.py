@@ -57,6 +57,8 @@ def etl_2():
     if last_run:
         shop_ids = extract_shop(last_run=last_run)
         etl(shop_ids, last_run)
+
+    worker2.create_view_and_index()
     # for i in range(0, len(shop_ids), limit):
         # etl(shop_ids[i:i+limit], last_run)
     
