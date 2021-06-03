@@ -33,7 +33,7 @@ def extract(last_run: float) -> list:
     DL = DataLake(role='read_only')
     return list(DL.products.find({'fetched_time': {'$gte': last_run}}, {"_id": 0}).sort([('fetched_time', -1), ('updated_at', -1)]))
 
-def transform(extracted_product: list) -> list:
+def transform(extracted_product: list, sub_name: str="") -> list:
     path = os.getcwd()+ "/dags/data/csv/"
     INDEXING = False
 
@@ -44,7 +44,7 @@ def transform(extracted_product: list) -> list:
     df.replace(r';',  ',', regex=True, inplace=True)
     df.replace(r'\n',  ' ', regex=True, inplace=True)
     
-    def transform_general(keys: list, table_name: str, sub_name: str="", normalize_key: dict={}, strip_key: list=[], expand: dict={}, expand_inplace: bool=False, replace_column_value: list=[], special_key: str="") -> dict: 
+    def transform_general(keys: list, table_name: str, sub_name: str=sub_name, normalize_key: dict={}, strip_key: list=[], expand: dict={}, expand_inplace: bool=False, replace_column_value: list=[], special_key: str="") -> dict: 
         file_name = f"{table_name}{sub_name}.csv"
         file_path = path + file_name
         
@@ -55,7 +55,6 @@ def transform(extracted_product: list) -> list:
             data[key].replace(' ',  '', regex=True, inplace=True)
 
         if normalize_key:
-            
             for key, value in normalize_key.items():
                 try:
                     if value is int:
@@ -115,7 +114,15 @@ def transform(extracted_product: list) -> list:
     product = transform_general(
         keys = ["product_id", "fetched_time", "product_name", "product_image", "product_link", "updated_at", "shop_id"],
         table_name = "product",
-        strip_key = ["product_image", "product_link"]
+        strip_key = ["product_image", "product_link"],
+        replace_column_value = [
+            {"product_link": [
+                {"old_value": "%", "new_value": ""}
+            ]},
+            {"product_image": [
+                {"old_value": "%", "new_value": ""}
+            ]}
+        ]
     )
     product_brand = transform_general(
         keys = ["product_id", "fetched_time", "product_brand", "category_id", "label_ids"],
@@ -125,6 +132,7 @@ def transform(extracted_product: list) -> list:
                     {"old_value": "[", "new_value": "{"},
                     {"old_value": "]", "new_value": "}"},
                     {"old_value": "nan", "new_value": "{}"},
+                    {"old_value": "None", "new_value": "{}"},
                 ]
             },
             {"product_brand": [
@@ -140,10 +148,12 @@ def transform(extracted_product: list) -> list:
         replace_column_value = [
             {"is_freeship": [
                     {"old_value": "nan", "new_value": "False"},
+                    {"old_value": "None", "new_value": "False"},
                 ]
             },
             {"is_on_flash_sale": [
                     {"old_value": "nan", "new_value": "False"},
+                    {"old_value": "None", "new_value": "False"},
                 ]
             },
         ]
@@ -195,10 +205,10 @@ def load(transformed_data):
                 logger.error(e)
                 continue
             else:
-                os.remove(file_path)
+                # os.remove(file_path)
                 pass
             finally:
-                # os.remove(file_path)
+                os.remove(file_path)
                 pass
         return True
     except Exception as e:
@@ -210,22 +220,27 @@ def create_view_and_index():
     DWH.create_view()
     DWH.create_index()
 
+import sys
+import concurrent.futures
+
 if __name__ == "__main__":
-    last_run = 0
+    last_run = float(sys.argv[1])
     shop_ids = extract_distinct_shop(last_run)
-    def etl(shop_ids, last_run):
+    def etl(shop_ids, last_run, sub_name):
         products = extract_product_from_shops(shop_ids, last_run)
         print("number of product", len(products))
-        transformed = transform(products)
+        transformed = transform(products, sub_name)
         loading = load(transformed)
         print("Loading: ", loading)
 
     a = len(shop_ids)
     print("Number of shops: ", a)
-    limit = 50
-    for i in range(0, a, limit):
-        shops = shop_ids[i:i+limit]
-        print(f"{i}. Number of shop: ", len(shops))
-        etl(shops, last_run)
+    limit = 500
+    with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
+        for i in range(0, a, limit):
+            shops = shop_ids[i:i+limit]
+            print(f"{i}. Number of shop: ", len(shops))
+            # etl(shops, last_run, sub_name=i)
+            executor.submit(etl, shops, last_run, i)
     # etl(shop_ids=shop_ids, last_run=last_run)
     create_view_and_index()

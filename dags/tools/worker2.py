@@ -54,21 +54,6 @@ def transform(extracted_product: list) -> list:
             data[key].replace({r'\s+$': '', r'^\s+': ''}, regex=True, inplace=True)
             data[key].replace(' ',  '', regex=True, inplace=True)
 
-        if normalize_key:
-            
-            for key, value in normalize_key.items():
-                try:
-                    if value is int:
-                        data[key] = data[key].apply(lambda x: pd.Series(int(float(x)) if x.lower() != "nan" else 0))
-                    elif value is float:
-                        data[key] = data[key].apply(lambda x: pd.Series(float(x) if x.lower() != "nan" else 0))
-                    elif value is str:
-                        data[key] = data[key].apply(lambda x: pd.Series(str(x)))
-                    elif value is bool:
-                        data[key] = data[key].apply(lambda x: pd.Series(bool(x)) if x else False)
-                except Exception as e:
-                    print(e)
-
         if replace_column_value:
             def transform_column(x):
                 return x.replace(value['old_value'], value['new_value'])
@@ -95,6 +80,20 @@ def transform(extracted_product: list) -> list:
             if special_key == "product_brand":
                 data[special_key] = data[special_key].apply(lambda x: pd.Series(x if x else "No Brand"))
 
+        if normalize_key:
+            for key, value in normalize_key.items():
+                try:
+                    if value is int:
+                        data[key] = data[key].apply(lambda x: pd.Series(int(float(x)) if x.lower() != "nan" else 0))
+                    elif value is float:
+                        data[key] = data[key].apply(lambda x: pd.Series(float(x) if x.lower() != "nan" else 0))
+                    elif value is str:
+                        data[key] = data[key].apply(lambda x: pd.Series(str(x)))
+                    elif value is bool:
+                        data[key] = data[key].apply(lambda x: pd.Series(bool(x)) if x else False)
+                except Exception as e:
+                    print(e)
+
 
         data.to_csv(file_path, index=INDEXING, sep=DELIMITER)
         return {'file_path': file_path, 'table_name': table_name, 'keys': keys}
@@ -115,7 +114,15 @@ def transform(extracted_product: list) -> list:
     product = transform_general(
         keys = ["product_id", "fetched_time", "product_name", "product_image", "product_link", "updated_at", "shop_id"],
         table_name = "product",
-        strip_key = ["product_image", "product_link"]
+        strip_key = ["product_image", "product_link"],
+        replace_column_value = [
+            {"product_link": [
+                {"old_value": "%", "new_value": ""}
+            ]},
+            {"product_image": [
+                {"old_value": "%", "new_value": ""}
+            ]}
+        ]
     )
     product_brand = transform_general(
         keys = ["product_id", "fetched_time", "product_brand", "category_id", "label_ids"],
@@ -125,6 +132,7 @@ def transform(extracted_product: list) -> list:
                     {"old_value": "[", "new_value": "{"},
                     {"old_value": "]", "new_value": "}"},
                     {"old_value": "nan", "new_value": "{}"},
+                    {"old_value": "None", "new_value": "{}"},
                 ]
             },
             {"product_brand": [
@@ -140,10 +148,12 @@ def transform(extracted_product: list) -> list:
         replace_column_value = [
             {"is_freeship": [
                     {"old_value": "nan", "new_value": "False"},
+                    {"old_value": "None", "new_value": "False"},
                 ]
             },
             {"is_on_flash_sale": [
                     {"old_value": "nan", "new_value": "False"},
+                    {"old_value": "None", "new_value": "False"},
                 ]
             },
         ]
@@ -177,7 +187,8 @@ def transform(extracted_product: list) -> list:
             "old_key": "fetched_time",
             "new_key": ["day", "month", "year", "datetime"]
         },
-        expand_inplace = False
+        expand_inplace = False,
+        normalize_key = {"day": int, "month": int, "year": int}
     )
     return [shop, product, product_brand, product_price, product_rating, product_feedback, product_quantity, product_time]
         

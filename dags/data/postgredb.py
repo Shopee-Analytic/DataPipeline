@@ -1,5 +1,3 @@
-from operator import index
-from shutil import ExecError
 import yaml
 from psycopg2.pool import ThreadedConnectionPool
 from random import uniform
@@ -47,7 +45,7 @@ def get_pool(role):
 
 class DataWareHouse:
     def __init__(self, role='admin'):
-        self.VERSION = "v7"
+        self.VERSION = "t01"
         self.role = role
         self.open_pool()
     def open_pool(self):
@@ -128,7 +126,7 @@ class DataWareHouse:
         arr = [
             {"view_name":  "tableView",
             "command": f"""
-                select distinct on (product_id) product_name, product_image, product_link, product_brand, rating_star, rating_count, category_id, product_price, product_discount, product_price*(1-product_discount/100) as price_after_discount, currency, stock, sold, day, month, year
+                select distinct on (product_id) product_id, product_name, product_image, product_link, product_brand, rating_star, rating_count, category_id, product_price, product_discount, product_price*(1-product_discount/100) as price_after_discount, currency, stock, sold, day, month, year
                 from {self.VERSION}.product
                 natural join {self.VERSION}.product_time
                 natural join {self.VERSION}.product_brand
@@ -139,7 +137,9 @@ class DataWareHouse:
             """},
             {"view_name": "productPriceView",
             "command": f"""
-                SELECT * FROM 
+                SELECT product_id, product_price*(1-product_discount) as price_after_discount
+                FROM {self.VERSION}.product
+                natural join {self.VERSION}.product_price;
             """
             }
         ]
