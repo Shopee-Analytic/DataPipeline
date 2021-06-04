@@ -14,12 +14,12 @@ mongo:
 
 postgre:
   admin:
-    host: "bzqhh23kgzqlauxmaig1-postgresql.services.clever-cloud.com"
-    database: "bzqhh23kgzqlauxmaig1"
+    host: "bfzs3f1hetgaveiesq4e-postgresql.services.clever-cloud.com"
+    database: "bfzs3f1hetgaveiesq4e"
     user: "u3avr14nzuosnobvncuw"
     password: "72m59WA46DAQkK1iwZDS"
-    port: "5432"
-    url: "postgresql://u3avr14nzuosnobvncuw:72m59WA46DAQkK1iwZDS@bzqhh23kgzqlauxmaig1-postgresql.services.clever-cloud.com:5432/bzqhh23kgzqlauxmaig1"
+    port: "5484"
+    url: "postgresql://u3avr14nzuosnobvncuw:72m59WA46DAQkK1iwZDS@bfzs3f1hetgaveiesq4e-postgresql.services.clever-cloud.com:5484/bfzs3f1hetgaveiesq4e"
 
   localhost:
     host: localhost
