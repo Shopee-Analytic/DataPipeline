@@ -23,7 +23,7 @@ def extract_distinct_shop(last_run) -> list:
 
 def extract_product_from_shop(shop_id: int, last_run) -> list:
     DL = DataLake(role='read_only')
-    return list(DL.products.find({'fetched_time': {'$gte': last_run}, 'shop_id': shop_id}, {"_id": 0}, allow_disk_use=True).sort([('fetched_time', -1)]))
+    return list(DL.products.find({'fetched_time': {'$gte': last_run}, 'shop_id': shop_id}, {"_id": 0}, allow_disk_use=True).distinct('shop_id', 'fetched_time').sort([('fetched_time', -1)]))
 
 def extract_product_from_shops(shop_ids: list, last_run) -> list:
     DL = DataLake(role='read_only')
@@ -79,20 +79,6 @@ def transform(extracted_product: list) -> list:
         if special_key != "":
             if special_key == "product_brand":
                 data[special_key] = data[special_key].apply(lambda x: pd.Series(x if x else "No Brand"))
-
-        if normalize_key:
-            for key, value in normalize_key.items():
-                try:
-                    if value is int:
-                        data[key] = data[key].apply(lambda x: pd.Series(int(float(x)) if x.lower() != "nan" else 0))
-                    elif value is float:
-                        data[key] = data[key].apply(lambda x: pd.Series(float(x) if x.lower() != "nan" else 0))
-                    elif value is str:
-                        data[key] = data[key].apply(lambda x: pd.Series(str(x)))
-                    elif value is bool:
-                        data[key] = data[key].apply(lambda x: pd.Series(bool(x)) if x else False)
-                except Exception as e:
-                    print(e)
 
 
         data.to_csv(file_path, index=INDEXING, sep=DELIMITER)
@@ -187,8 +173,7 @@ def transform(extracted_product: list) -> list:
             "old_key": "fetched_time",
             "new_key": ["day", "month", "year", "datetime"]
         },
-        expand_inplace = False,
-        normalize_key = {"day": int, "month": int, "year": int}
+        expand_inplace = False
     )
     return [shop, product, product_brand, product_price, product_rating, product_feedback, product_quantity, product_time]
         
