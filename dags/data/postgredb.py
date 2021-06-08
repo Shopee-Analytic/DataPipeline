@@ -40,7 +40,8 @@ def get_pool(role):
         host = params['host'],
         database = params['database'],
         user=params['user'],
-        password=params['password']
+        password=params['password'],
+        port=params['port']
     )
 
 class DataWareHouse:

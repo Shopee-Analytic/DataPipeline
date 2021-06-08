@@ -14,15 +14,24 @@ mongo:
 
 postgre:
   admin:
-    host: "bzqhh23kgzqlauxmaig1-postgresql.services.clever-cloud.com"
-    database: "bzqhh23kgzqlauxmaig1"
+    host: "bfzs3f1hetgaveiesq4e-postgresql.services.clever-cloud.com"
+    database: "bfzs3f1hetgaveiesq4e"
     user: "u3avr14nzuosnobvncuw"
     password: "72m59WA46DAQkK1iwZDS"
-    port: "5432"
-    url: "postgresql://u3avr14nzuosnobvncuw:72m59WA46DAQkK1iwZDS@bzqhh23kgzqlauxmaig1-postgresql.services.clever-cloud.com:5432/bzqhh23kgzqlauxmaig1"
+    port: "5484"
+    url: "postgresql://u3avr14nzuosnobvncuw:72m59WA46DAQkK1iwZDS@bfzs3f1hetgaveiesq4e-postgresql.services.clever-cloud.com:5484/bfzs3f1hetgaveiesq4e"
 
-  localhost:
-    host: localhost
-    database: test
-    user: postgres
-    password: postgres
+  airflow:
+    host: "bewz0f98dznsrhnyaxjs-postgresql.services.clever-cloud.com"
+    database: "bewz0f98dznsrhnyaxjs"
+    user: "ua2iirwnucawdrn13qwq"
+    password: "2IYisO1rP08jywXa9Kmr"
+    port: "5725"
+    url: "postgresql://ua2iirwnucawdrn13qwq:2IYisO1rP08jywXa9Kmr@hv-par5-009.clvrcld.net:12645/bewz0f98dznsrhnyaxjs"
+
+redis:
+  admin:
+    host: "b6gntx0yefmzkgeeo93o-redis.services.clever-cloud.com"
+    password: "meQYqQ7tWr56oZkFAgz"
+    port: "3482"
+    url: "redis://:meQYqQ7tWr56oZkFAgz@b6gntx0yefmzkgeeo93o-redis.services.clever-cloud.com:3482"
