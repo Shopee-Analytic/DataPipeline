@@ -24,7 +24,7 @@ DEFAULT_ARGS = {
 }
 
 # [START dag_decorator_usage]
-@dag(default_args=DEFAULT_ARGS, tags=['datapipeline'], start_date=days_ago(1), schedule_interval="9 0 * * *", concurrency=32, default_view='graph')
+@dag(default_args=DEFAULT_ARGS, tags=['datapipeline'], start_date=days_ago(1), schedule_interval="9 0 * * *", concurrency=32, max_active_runs=2, default_view='graph')
 def etl_1():
 
     @task(retries=3, retry_exponential_backoff=True)

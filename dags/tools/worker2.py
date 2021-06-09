@@ -33,7 +33,8 @@ def extract(last_run: float) -> list:
     DL = DataLake(role='read_only')
     return list(DL.products.find({'fetched_time': {'$gte': last_run}}, {"_id": 0}).sort([('fetched_time', -1), ('updated_at', -1)]))
 
-def transform(extracted_product: list) -> list:
+
+def transform(extracted_product: list, sub_name: str="") -> list:
     path = os.getcwd()+ "/dags/data/csv/"
     INDEXING = False
 
@@ -44,7 +45,7 @@ def transform(extracted_product: list) -> list:
     df.replace(r';',  ',', regex=True, inplace=True)
     df.replace(r'\n',  ' ', regex=True, inplace=True)
     
-    def transform_general(keys: list, table_name: str, sub_name: str="", normalize_key: dict={}, strip_key: list=[], expand: dict={}, expand_inplace: bool=False, replace_column_value: list=[], special_key: str="") -> dict: 
+    def transform_general(keys: list, table_name: str, strip_key: list=[], expand: dict={}, expand_inplace: bool=False, replace_column_value: list=[], special_key: str="") -> dict: 
         file_name = f"{table_name}{sub_name}.csv"
         file_path = path + file_name
         
