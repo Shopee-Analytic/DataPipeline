@@ -23,11 +23,11 @@ def extract_distinct_shop(last_run) -> list:
 
 def extract_product_from_shop(shop_id: int, last_run) -> list:
     DL = DataLake(role='read_only')
-    return list(DL.products.find({'fetched_time': {'$gte': last_run}, 'shop_id': shop_id}, {"_id": 0}, allow_disk_use=True).distinct('shop_id', 'fetched_time').sort([('fetched_time', -1)]))
+    return list(DL.products.find({'fetched_time': {'$gte': last_run}, 'shop_id': shop_id}, {"_id": 0}).distinct('shop_id', 'fetched_time').sort([('fetched_time', -1)]))
 
 def extract_product_from_shops(shop_ids: list, last_run) -> list:
     DL = DataLake(role='read_only')
-    return list(DL.products.find({'fetched_time': {'$gte': last_run}, 'shop_id': {'$in': shop_ids}}, {"_id": 0}, allow_disk_use=True).sort([('fetched_time', -1)]))
+    return list(DL.products.find({'fetched_time': {'$gte': last_run}, 'shop_id': {'$in': shop_ids}}, {"_id": 0}).sort([('fetched_time', -1)]))
 
 def extract(last_run: float) -> list:
     DL = DataLake(role='read_only')
