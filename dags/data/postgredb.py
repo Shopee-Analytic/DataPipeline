@@ -36,7 +36,7 @@ def get_pool(role):
     params = config(role=role)
     return ThreadedConnectionPool(
         minconn = 1,
-        maxconn = 5,
+        maxconn = 125,
         host = params['host'],
         database = params['database'],
         user=params['user'],
@@ -168,6 +168,6 @@ if __name__ == "__main__":
     path = "dags\data\command\create_table.sql"
     DataWareHouse(role='admin').exec(path)
     DW = DataWareHouse()
-    # DW.create_index()
-    # DW.create_view()
+    DW.create_index()
+    DW.create_view()
     

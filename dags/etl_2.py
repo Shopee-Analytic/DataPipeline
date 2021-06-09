@@ -53,7 +53,7 @@ def etl_2():
         return datetime.timestamp(dag_runs[0].execution_date) if dag_runs else None
 
     last_run = get_most_recent_dag_run()
-    limit = 50
+    limit = 10
     if last_run:
         shop_ids = extract_shop(last_run=last_run)
         # etl(shop_ids, last_run)

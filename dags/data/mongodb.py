@@ -37,17 +37,21 @@ def get_client(role):
 # Version 1 - Data in 1 collection
 class DataLake:
     def __init__(self, role='read_and_write'):
-        client = get_client(role='clever-cloud')
-        self.mydb = client['bmcgn4pwhq1ritg85krm']
+        client = get_client(role=role)
+        self.mydb = client['Crawler']
         self.products = self.mydb['shopee']
 
     def create_index(self, indexes: list):
-        for index in indexes:
-            self.products.create_index(
-                [
-                (index['key'], index['index_type']), 
-
-                ])
+        try:
+            for index in indexes:
+                self.products.create_index(
+                    [
+                    (index['key'], index['index_type']), 
+                    ])
+        except Exception as e:
+            logger.error(e)
+        else:
+            logger.info("Create index on DATALAKE success")
 
     def insert_one_product(self, product_data: dict) -> str:
         return str(self.products.insert_one(product_data).inserted_id)
@@ -56,6 +60,11 @@ class DataLake:
         ids = []
         for _id in self.products.insert_many(product_data).inserted_ids:
             ids.append(str(_id))
+        self.create_index(indexes = [
+            {"key": "_id", "index_type": 1},
+            {"key": "fetched_time", "index_type": -1},
+            {"key": "updated_at", "index_type": -1}
+        ])
         return ids
 
     def find_one_by_id(self, product_id) -> dict:
@@ -74,8 +83,8 @@ if __name__ == "__main__":
         {"key": "updated_at", "index_type": -1}
     ]
     DL = DataLake(role='read_and_write')
-    # DL.products.drop()
-    # DL.create_index(indexes=indexes)
+    DL.products.drop()
+    DL.create_index(indexes=indexes)
     print(len(list(DL.products.find())))
     # print(DL.find_duplicates())
 

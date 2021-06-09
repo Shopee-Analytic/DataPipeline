@@ -235,8 +235,8 @@ if __name__ == "__main__":
 
     a = len(shop_ids)
     print("Number of shops: ", a)
-    limit = 500
-    with concurrent.futures.ThreadPoolExecutor(max_workers=10) as executor:
+    limit = 10
+    with concurrent.futures.ThreadPoolExecutor() as executor:
         for i in range(0, a, limit):
             shops = shop_ids[i:i+limit]
             print(f"{i}. Number of shop: ", len(shops))

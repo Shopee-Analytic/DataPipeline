@@ -106,7 +106,7 @@ if __name__ == "__main__":
         links = data['links']
         pages = data['pages']
 
-    with concurrent.futures.ThreadPoolExecutor(max_workers=20) as executor:
+    with concurrent.futures.ThreadPoolExecutor() as executor:
         futures = []
         for link in links:
             for page in range(0, pages, 1):
