@@ -37,8 +37,8 @@ def get_client(role):
 # Version 1 - Data in 1 collection
 class DataLake:
     def __init__(self, role='read_and_write'):
-        client = get_client(role)
-        self.mydb = client['ShopeeCrawler']
+        client = get_client(role='clever-cloud')
+        self.mydb = client['bmcgn4pwhq1ritg85krm']
         self.products = self.mydb['shopee']
 
     def create_index(self, indexes: list):
@@ -75,8 +75,8 @@ if __name__ == "__main__":
     ]
     DL = DataLake(role='read_and_write')
     # DL.products.drop()
-    DL.create_index(indexes=indexes)
-    # print(len(list(DL.products.find().distinct('product_id'))))
+    # DL.create_index(indexes=indexes)
+    print(len(list(DL.products.find())))
     # print(DL.find_duplicates())
 
     

@@ -11,7 +11,13 @@ mongo:
     url: "mongodb+srv://read_and_write:Lb8bW2naCU2jfSuP@cluster0.b2b5a.mongodb.net/myFirstDatabase?retryWrites=true&w=majority&ssl=true&ssl_cert_reqs=CERT_NONE"
     username: "read_and_write"
     password: "Lb8bW2naCU2jfSuP"
-
+  clever-cloud:
+    url: "mongodb://utbbiucoymjvkdcvtwo0:YI57EmNUFDmChSyS2vX@bmcgn4pwhq1ritg85krm-mongodb.services.clever-cloud.com:2316/bmcgn4pwhq1ritg85krm"
+    username: "utbbiucoymjvkdcvtwo0"
+    password: "YI57EmNUFDmChSyS2vX"
+    port: "2316"
+    db: "bmcgn4pwhq1ritg85krm"
+    
 postgre:
   admin:
     host: "bfzs3f1hetgaveiesq4e-postgresql.services.clever-cloud.com"
