@@ -116,7 +116,7 @@ class DataWareHouse:
         def create(view_name, command):
             if view_name and command:
                 drop = f"DROP VIEW IF EXISTS {self.VERSION}.{view_name}"
-                sql = "CREATE VIEW {}.{} AS {}".format(self.VERSION, view_name, command)
+                sql = "CREATE MATERIALIZED VIEW {}.{} AS {}".format(self.VERSION, view_name, command)
                 try:
                     with self.get_cursor() as cur:
                         cur.execute(drop)
@@ -174,23 +174,37 @@ class DataWareHouse:
             create(view_name = i["view_name"], command = i['command'])
 
 
-    def create_index(self, index_name, table_name, columns):
-        drop = f"DROP INDEX IF EXISTS {self.VERSION}.{index_name};"
-        sql = f"CREATE INDEX {index_name} ON {self.VERSION}.{table_name} ({', '.join(map(str, columns))});"
-        try:
-            with self.get_cursor() as cur:
-                cur.execute(drop)
-                cur.execute(sql)
-                print(f"Create index {index_name} on {table_name} successfully!")
-        except Exception as e:
-            print(e)    
-            print(f"Failed to create index {index_name} on {table_name}!")
+    def create_index(self):
+        def create(index_name, table_name, columns):
+            drop = f"DROP INDEX IF EXISTS {self.VERSION}.{index_name};"
+            sql = f"CREATE INDEX {index_name} ON {self.VERSION}.{table_name} ({', '.join(map(str, columns))});"
+            try:
+                with self.get_cursor() as cur:
+                    cur.execute(drop)
+                    cur.execute(sql)
+                    print(f"Create index {index_name} on {table_name} successfully!")
+            except Exception as e:
+                print(e)    
+                print(f"Failed to create index {index_name} on {table_name}!")
         
+        arr = [
+            {"index_name": "productView_index",
+            "table_name": "productview",
+            "columns": ["day", "month", "year"]
+            },
+            {"index_name": "tableView_index",
+            "table_name": "tableview",
+            "columns": ["day", "month", "year"]
+            },            
+        ]
+
+        for i in arr:
+            create(i['index_name'], i['table_name'], i["columns"])
+
 if __name__ == "__main__":
     # path = "dags\data\command\create_table.sql"
     # DataWareHouse(role='admin').exec(path)
     DW = DataWareHouse()
-    # DW.create_index(index_name="product_id_index", table_name="product", columns=['product_id', 'fetched_time'])
-    # DW.create_index(index_name="product_time_index", table_name="product_time", columns=['day', 'month'])
     DW.create_view()
+    DW.create_index()
     
