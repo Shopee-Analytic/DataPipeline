@@ -96,6 +96,8 @@ def load(transformed_data):
     return datalake.insert_many_products(transformed_data)
 
 if __name__ == "__main__":
+    with open('test/last_run.txt', "w") as f:
+        f.write(str(datetime.timestamp(datetime.utcnow())))
     def etl(link, page: int):
         extracted_data = extract(link, newest=page*100)
         transformed_data = transform(extracted_data)
@@ -111,7 +113,8 @@ if __name__ == "__main__":
         for link in links:
             for page in range(0, pages, 1):
                 futures.append(executor.submit(etl, link, page))
-
+    count = 0
     for future in concurrent.futures.as_completed(futures):
-        logger.info(len(future.result()))
-        
+        count += len(future.result()) if len(future.result()) else 0
+    
+    logger.info(count)

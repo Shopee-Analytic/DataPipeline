@@ -224,7 +224,10 @@ import sys
 import concurrent.futures
 
 if __name__ == "__main__":
-    last_run = float(sys.argv[1])
+
+    with open('test/last_run.txt') as f:
+        last_run = float(f.read())
+        
     shop_ids = extract_distinct_shop(last_run)
     def etl(shop_ids, last_run, sub_name):
         products = extract_product_from_shops(shop_ids, last_run)
