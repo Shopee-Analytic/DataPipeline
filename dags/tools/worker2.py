@@ -68,7 +68,7 @@ def transform(extracted_product: list, sub_name: str="") -> list:
             keys.extend(expand['new_key'])
             if table_name == "product_time":
                 def to_date(x) -> datetime:
-                    return datetime.utcfromtimestamp(float(x))
+                    return datetime.fromtimestamp(float(x))
                 old_cols = data[expand['old_key']]
                 data['day'] = old_cols.apply(lambda x: pd.Series(to_date(x).day))
                 data['month'] = old_cols.apply(lambda x: pd.Series(to_date(x).month))

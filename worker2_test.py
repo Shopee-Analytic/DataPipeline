@@ -81,7 +81,7 @@ def transform(extracted_product: list, sub_name: str="") -> list:
             keys.extend(expand['new_key'])
             if table_name == "product_time":
                 def to_date(x) -> datetime:
-                    return datetime.utcfromtimestamp(float(x))
+                    return datetime.fromtimestamp(float(x))
                 old_cols = data[expand['old_key']]
                 data['day'] = old_cols.apply(lambda x: pd.Series(to_date(x).day))
                 data['month'] = old_cols.apply(lambda x: pd.Series(to_date(x).month))
@@ -227,7 +227,8 @@ if __name__ == "__main__":
 
     with open('test/last_run.txt') as f:
         last_run = float(f.read())
-        
+
+    last_run = 0
     shop_ids = extract_distinct_shop(last_run)
     def etl(shop_ids, last_run, sub_name):
         products = extract_product_from_shops(shop_ids, last_run)
@@ -246,4 +247,10 @@ if __name__ == "__main__":
             # etl(shops, last_run, sub_name=i)
             executor.submit(etl, shops, last_run, i)
     # etl(shop_ids=shop_ids, last_run=last_run)
+
+    count = 0
+    for future in concurrent.futures.as_completed(futures):
+        count += len(future.result()) if len(future.result()) else 0
+        
     create_view_and_index()
+    logger.info(count)

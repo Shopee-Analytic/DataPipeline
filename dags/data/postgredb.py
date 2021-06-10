@@ -115,12 +115,14 @@ class DataWareHouse:
         
         def create(view_name, command):
             if view_name and command:
-                drop = f"DROP VIEW IF EXISTS {self.VERSION}.{view_name}"
+                drop = f"DROP MATERIALIZED VIEW IF EXISTS {self.VERSION}.{view_name}"
                 sql = "CREATE MATERIALIZED VIEW {}.{} AS {}".format(self.VERSION, view_name, command)
+                refresh = f"REFRESH MATERIALIZED VIEW {self.VERSION}.{view_name}"
                 try:
                     with self.get_cursor() as cur:
                         cur.execute(drop)
                         cur.execute(sql)
+                        cur.execute(refresh)
                         print(f"Create view {view_name} successfully!")
                 except Exception as e:
                     print(e)
@@ -157,7 +159,7 @@ class DataWareHouse:
                 columns=['product_id', 'product_name', 'product_image', "product_link", "rating_star", "category_id", 'product_price', "product_discount", "currency", "stock", "sold", "day", "month", "year"],
                 main_table= "product",
                 join_tables=["product_time", "product_brand", "product_rating", "product_price", "product_quantity"],
-                orders= {"year": "desc", "month": "desc", "day": "desc", "product_id": "desc"}
+                orders= {"year": "desc", "month": "desc", "day": "desc"}
                 )
             },
             {"view_name": "productView",
@@ -166,7 +168,7 @@ class DataWareHouse:
                 columns=['product_id', 'product_name', 'product_image', "product_link", "rating_star", "rating_count", "label_ids", "category_id", 'product_price', "product_discount", '(product_price*(1-product_discount/100)) as price_after_discount', "currency", "stock", "sold", "day", "month", "year"],
                 main_table="product",
                 join_tables=["product_time", "product_brand", "product_rating", "product_price", "product_quantity"],
-                orders= {"year": "desc", "month": "desc", "day": "desc", "product_id": "desc"}
+                orders= {"year": "desc", "month": "desc", "day": "desc"}
             )}
         ]
         
@@ -176,11 +178,11 @@ class DataWareHouse:
 
     def create_index(self):
         def create(index_name, table_name, columns):
-            drop = f"DROP INDEX IF EXISTS {self.VERSION}.{index_name};"
-            sql = f"CREATE INDEX {index_name} ON {self.VERSION}.{table_name} ({', '.join(map(str, columns))});"
+            # drop = f"DROP INDEX IF EXISTS {self.VERSION}.{index_name};"
+            sql = f"CREATE UNIQUE INDEX {index_name} ON {self.VERSION}.{table_name} ({', '.join(map(str, columns))});"
             try:
                 with self.get_cursor() as cur:
-                    cur.execute(drop)
+                    # cur.execute(drop)
                     cur.execute(sql)
                     print(f"Create index {index_name} on {table_name} successfully!")
             except Exception as e:
@@ -189,12 +191,12 @@ class DataWareHouse:
         
         arr = [
             {"index_name": "productView_index",
-            "table_name": "productview",
-            "columns": ["day", "month", "year"]
+            "table_name": "productView",
+            "columns": ["day", "month", "year", "product_id"]
             },
             {"index_name": "tableView_index",
-            "table_name": "tableview",
-            "columns": ["day", "month", "year"]
+            "table_name": "tableView",
+            "columns": ["day", "month", "year", "product_id"]
             },            
         ]
 
