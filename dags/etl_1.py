@@ -1,3 +1,4 @@
+from worker1_test import retry_with_backoff
 from airflow.decorators import dag, task
 from airflow.utils.task_group import TaskGroup
 from airflow.utils.dates import days_ago
@@ -38,11 +39,16 @@ def etl_1():
     @task(depends_on_past=True, retries=3, retry_exponential_backoff=True)
     def load(transformed_data):
         return worker1.load(transformed_data)
+    
 
     def etl(link: str, page: int):
         extracted_data = extract(link, newest=page*100)
         transformed_data = transform(extracted_data)
         load(transformed_data)
+
+    @task(depends_on_past=True, retries=3, retry_exponential_backoff=True)
+    def indexing():
+        return worker1.indexing()
 
     with open(f'{os.getcwd()}/dags/config/config.yml') as f:
         data = yaml.load(f, Loader=yaml.FullLoader)
@@ -54,7 +60,8 @@ def etl_1():
             _id = f'{page}-{link.split(".")[-1]}'
             with TaskGroup(_id, tooltip='Tasks for section'):
                 etl(link, page)
-
+    
+    indexing()
     # a link -> a job
     # a job contains 3 tasks(steps): extract -> transform -> load
 

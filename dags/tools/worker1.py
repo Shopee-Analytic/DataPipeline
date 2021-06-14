@@ -92,3 +92,11 @@ def load(transformed_data: list):
     datalake = DataLake(role='read_and_write')
     return datalake.insert_many_products(transformed_data)
       
+def indexing(indexes: list=[{"key": "_id", "index_type": 1}, {"key": "fetched_time", "index_type": -1}, {"key": "updated_at", "index_type": -1}]):
+    try:
+        datalake = DataLake(role='read_and_write')
+        datalake.create_index(indexes=indexes)
+        return True
+    except Exception as e:
+        logger.error(e)
+        return False

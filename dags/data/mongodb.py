@@ -60,11 +60,6 @@ class DataLake:
         ids = []
         for _id in self.products.insert_many(product_data).inserted_ids:
             ids.append(str(_id))
-        self.create_index(indexes = [
-            {"key": "_id", "index_type": 1},
-            {"key": "fetched_time", "index_type": -1},
-            {"key": "updated_at", "index_type": -1}
-        ])
         return ids
 
     def find_one_by_id(self, product_id) -> dict:

@@ -95,6 +95,15 @@ def load(transformed_data):
     datalake = DataLake(role='read_and_write')
     return datalake.insert_many_products(transformed_data)
 
+def indexing(indexes: list=[{"key": "_id", "index_type": 1}, {"key": "fetched_time", "index_type": -1}, {"key": "updated_at", "index_type": -1}]):
+    try:
+        datalake = DataLake(role='read_and_write')
+        datalake.create_index(indexes=indexes)
+        return True
+    except Exception as e:
+        logger.error(e)
+        return False
+
 if __name__ == "__main__":
     with open('test/last_run.txt', "w") as f:
         f.write(str(datetime.timestamp(datetime.utcnow())))
@@ -118,3 +127,4 @@ if __name__ == "__main__":
         count += len(future.result()) if len(future.result()) else 0
     
     logger.info(count)
+    indexing()

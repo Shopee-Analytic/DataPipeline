@@ -33,7 +33,6 @@ def extract(last_run: float) -> list:
     DL = DataLake(role='read_only')
     return list(DL.products.find({'fetched_time': {'$gte': last_run}}, {"_id": 0}).sort([('fetched_time', -1), ('updated_at', -1)]))
 
-
 def transform(extracted_product: list, sub_name: str="") -> list:
     path = os.getcwd()+ "/dags/data/csv/"
     INDEXING = False
@@ -45,7 +44,7 @@ def transform(extracted_product: list, sub_name: str="") -> list:
     df.replace(r';',  ',', regex=True, inplace=True)
     df.replace(r'\n',  ' ', regex=True, inplace=True)
     
-    def transform_general(keys: list, table_name: str, strip_key: list=[], expand: dict={}, expand_inplace: bool=False, replace_column_value: list=[], special_key: str="") -> dict: 
+    def transform_general(keys: list, table_name: str, sub_name: str=sub_name, normalize_key: dict={}, strip_key: list=[], expand: dict={}, expand_inplace: bool=False, replace_column_value: list=[], special_key: str="") -> dict: 
         file_name = f"{table_name}{sub_name}.csv"
         file_path = path + file_name
         
@@ -54,6 +53,20 @@ def transform(extracted_product: list, sub_name: str="") -> list:
         for key in strip_key:
             data[key].replace({r'\s+$': '', r'^\s+': ''}, regex=True, inplace=True)
             data[key].replace(' ',  '', regex=True, inplace=True)
+
+        if normalize_key:
+            for key, value in normalize_key.items():
+                try:
+                    if value is int:
+                        data[key] = data[key].apply(lambda x: pd.Series(int(float(x)) if x.lower() != "nan" else 0))
+                    elif value is float:
+                        data[key] = data[key].apply(lambda x: pd.Series(float(x) if x.lower() != "nan" else 0))
+                    elif value is str:
+                        data[key] = data[key].apply(lambda x: pd.Series(str(x)))
+                    elif value is bool:
+                        data[key] = data[key].apply(lambda x: pd.Series(bool(x)) if x else False)
+                except Exception as e:
+                    print(e)
 
         if replace_column_value:
             def transform_column(x):
@@ -197,10 +210,10 @@ def load(transformed_data):
             finally:
                 os.remove(file_path)
                 pass
-        return True
+        return len(transformed_data)
     except Exception as e:
         print(e)
-        return False
+        return 0
 
 def create_view_and_index():
     DWH = DataWareHouse(role='admin')

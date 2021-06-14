@@ -117,12 +117,12 @@ class DataWareHouse:
             if view_name and command:
                 drop = f"DROP MATERIALIZED VIEW IF EXISTS {self.VERSION}.{view_name}"
                 sql = "CREATE MATERIALIZED VIEW {}.{} AS {}".format(self.VERSION, view_name, command)
-                refresh = f"REFRESH MATERIALIZED VIEW {self.VERSION}.{view_name}"
+                # refresh = f"REFRESH MATERIALIZED VIEW {self.VERSION}.{view_name}"
                 try:
                     with self.get_cursor() as cur:
                         cur.execute(drop)
                         cur.execute(sql)
-                        cur.execute(refresh)
+                        # cur.execute(refresh)
                         print(f"Create view {view_name} successfully!")
                 except Exception as e:
                     print(e)

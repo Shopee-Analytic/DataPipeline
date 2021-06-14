@@ -210,10 +210,10 @@ def load(transformed_data):
             finally:
                 os.remove(file_path)
                 pass
-        return True
+        return len(transformed_data)
     except Exception as e:
         print(e)
-        return False
+        return 0
 
 def create_view_and_index():
     DWH = DataWareHouse(role='admin')
@@ -228,29 +228,28 @@ if __name__ == "__main__":
     with open('test/last_run.txt') as f:
         last_run = float(f.read())
 
-    last_run = 0
     shop_ids = extract_distinct_shop(last_run)
-    def etl(shop_ids, last_run, sub_name):
+    def etl(shop_ids, sub_name):
         products = extract_product_from_shops(shop_ids, last_run)
         print("number of product", len(products))
         transformed = transform(products, sub_name)
         loading = load(transformed)
-        print("Loading: ", loading)
+        # print("Loading: ", loading)
+        return loading
 
     a = len(shop_ids)
     print("Number of shops: ", a)
-    limit = 10
+    limit = 50
     with concurrent.futures.ThreadPoolExecutor() as executor:
+        futures = []
         for i in range(0, a, limit):
             shops = shop_ids[i:i+limit]
             print(f"{i}. Number of shop: ", len(shops))
-            # etl(shops, last_run, sub_name=i)
-            executor.submit(etl, shops, last_run, i)
-    # etl(shop_ids=shop_ids, last_run=last_run)
+            futures.append(executor.submit(etl, shops, i))
 
     count = 0
     for future in concurrent.futures.as_completed(futures):
-        count += len(future.result()) if len(future.result()) else 0
+        count += future.result()
         
     create_view_and_index()
     logger.info(count)
