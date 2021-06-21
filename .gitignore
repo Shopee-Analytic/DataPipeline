@@ -144,3 +144,4 @@ dags/data/csv
 
 db-config.*
 */db-config.*
+plugins 

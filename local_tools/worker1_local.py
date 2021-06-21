@@ -104,7 +104,7 @@ def indexing(indexes: list=[{"key": "_id", "index_type": 1}, {"key": "fetched_ti
         logger.error(e)
         return False
 
-if __name__ == "__main__":
+def start():
     with open('test/last_run.txt', "w") as f:
         f.write(str(datetime.timestamp(datetime.utcnow())))
     def etl(link, page: int):
@@ -128,3 +128,6 @@ if __name__ == "__main__":
     
     logger.info(count)
     indexing()
+
+if __name__ == "__main__":
+    start()

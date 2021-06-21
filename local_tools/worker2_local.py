@@ -223,8 +223,7 @@ def create_view_and_index():
 import sys
 import concurrent.futures
 
-if __name__ == "__main__":
-
+def start():
     with open('test/last_run.txt') as f:
         last_run = float(f.read())
 
@@ -253,3 +252,6 @@ if __name__ == "__main__":
         
     create_view_and_index()
     logger.info(count)
+
+if __name__ == "__main__":
+    start()
