@@ -72,7 +72,7 @@ docker compose up (-d) airflow-init
 ```
 3. Start all build-in services: posgre, redis, flower, webserver, scheduler, worker 
 ```cli
-docker compose up \ # for 
+docker compose up (-d)
 ```
 *Note:
 - Add "-d" in command to run on background
