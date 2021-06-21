@@ -3,3 +3,4 @@ dnspython==2.1.0
 PyYAML==5.4
 psycopg2-binary==2.8.6
 pandas==1.1.5
+click==7.1.2
