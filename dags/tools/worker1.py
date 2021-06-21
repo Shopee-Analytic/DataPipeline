@@ -89,7 +89,7 @@ def transform(new_data):  # data = [{}, {}, {}, ...]
         return None
 
 def load(transformed_data: list):
-    datalake = DataLake(role='read_and_write')
+    datalake = DataLake(role='read_and_write', database="test")
     return datalake.insert_many_products(transformed_data)
       
 def indexing(indexes: list=[{"key": "_id", "index_type": 1}, {"key": "fetched_time", "index_type": -1}, {"key": "updated_at", "index_type": -1}]):

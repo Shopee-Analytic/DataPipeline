@@ -141,3 +141,6 @@ test/
 
 # Temp data csv
 dags/data/csv
+
+db-config.*
+*/db-config.*

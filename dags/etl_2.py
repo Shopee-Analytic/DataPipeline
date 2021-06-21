@@ -24,7 +24,7 @@ DEFAULT_ARGS = {
 }
 
 # [START dag_decorator_usage]
-@dag(default_args=DEFAULT_ARGS, tags=['datapipeline'], start_date=days_ago(1), schedule_interval="18 0 * * *", concurrency=32, max_active_runs=2, default_view='graph')
+@dag(default_args=DEFAULT_ARGS, tags=['datapipeline'], start_date=days_ago(1), schedule_interval="18 0 * * *", concurrency=3, max_active_runs=2, default_view='graph')
 def etl_2():
     @task(retries=3, retry_exponential_backoff=True)
     def extract_shop(last_run):
@@ -35,18 +35,23 @@ def etl_2():
         return worker2.extract_product_from_shops(shop_ids, last_run)
 
     @task(depends_on_past=True, retries=3, retry_exponential_backoff=True)
-    def transform(extracted_product):
+    def transform(extracted_product, sub_name):
         return worker2.transform(extracted_product=extracted_product)
 
     @task(depends_on_past=True, retries=3, retry_exponential_backoff=True)
     def load(transformed_data):
         return worker2.load(transformed_data)
+    
+    @task(depends_on_past=True)
+    def indexing(etl):
+        return worker2.create_view_and_index()
 
     def etl(shop_ids, last_run, sub_name):
         extracted_product = extract_product(shop_ids, last_run)
         transformed_data = transform(extracted_product=extracted_product, sub_name=sub_name)
-        load(transformed_data=transformed_data)
-    
+        loading = load(transformed_data=transformed_data)
+        indexing(loading)
+
     def get_most_recent_dag_run(dag_id='etl_1'):
         dag_runs = DagRun.find(dag_id=dag_id)
         dag_runs.sort(key=lambda x: x.execution_date, reverse=True)
@@ -56,10 +61,10 @@ def etl_2():
     limit = 10
     if last_run:
         shop_ids = extract_shop(last_run=last_run)
-        # etl(shop_ids, last_run)
-        for i in range(0, len(shop_ids), limit):
-            etl(shop_ids[i:i+limit], last_run, i)
-    worker2.create_view_and_index()
+        etl(shop_ids, last_run, "")
+        # for i in range(0, len(shop_ids), limit):
+        #     etl(shop_ids[i:i+limit], last_run, i)
+    # worker2.create_view_and_index()
 
     
 

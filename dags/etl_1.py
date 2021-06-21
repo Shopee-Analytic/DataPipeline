@@ -1,4 +1,3 @@
-from worker1_test import retry_with_backoff
 from airflow.decorators import dag, task
 from airflow.utils.task_group import TaskGroup
 from airflow.utils.dates import days_ago
@@ -8,7 +7,6 @@ from tools import worker1
 import os
 import yaml
 from datetime import timedelta
-from random import randint
 
 
 import logging
@@ -25,7 +23,7 @@ DEFAULT_ARGS = {
 }
 
 # [START dag_decorator_usage]
-@dag(default_args=DEFAULT_ARGS, tags=['datapipeline'], start_date=days_ago(1), schedule_interval="9 0 * * *", concurrency=32, max_active_runs=2, default_view='graph')
+@dag(default_args=DEFAULT_ARGS, tags=['datapipeline'], start_date=days_ago(1), schedule_interval="9 0 * * *", concurrency=3, max_active_runs=2, default_view='graph')
 def etl_1():
 
     @task(retries=3, retry_exponential_backoff=True)
@@ -46,11 +44,11 @@ def etl_1():
         transformed_data = transform(extracted_data)
         load(transformed_data)
 
-    @task(depends_on_past=True, retries=3, retry_exponential_backoff=True)
+    @task(retries=3, retry_exponential_backoff=True)
     def indexing():
         return worker1.indexing()
 
-    with open(f'{os.getcwd()}/dags/config/config.yml') as f:
+    with open(f'{os.getcwd()}/dags/config/config-with-airflow.yml') as f:
         data = yaml.load(f, Loader=yaml.FullLoader)
         links = data['links']
         pages = data['pages']

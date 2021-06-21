@@ -36,10 +36,10 @@ def get_client(role):
 
 # Version 1 - Data in 1 collection
 class DataLake:
-    def __init__(self, role='read_and_write'):
+    def __init__(self, role='read_and_write', database="Crawler", collection='shopee'):
         client = get_client(role=role)
-        self.mydb = client['Crawler']
-        self.products = self.mydb['shopee']
+        self.mydb = client[database]
+        self.products = self.mydb[collection]
 
     def create_index(self, indexes: list):
         try:

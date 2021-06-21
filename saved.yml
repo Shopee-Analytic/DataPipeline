@@ -20,8 +20,39 @@ x-airflow-common:
     - ./logs:/opt/airflow/logs
     - ./plugins:/opt/airflow/plugins
   user: "${AIRFLOW_UID}:${AIRFLOW_GID}"
+  depends_on:
+    postgres:
+      condition: service_healthy
+    redis:
+      condition: service_healthy
 
 services:
+  postgres:
+    image: postgres:13-alpine
+    container_name: postgres
+    environment:
+      POSTGRES_USER: airflow
+      POSTGRES_PASSWORD: airflow
+      POSTGRES_DB: airflow
+    volumes:
+      - postgres-db-volume:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "airflow"]
+      interval: 5s
+      retries: 5
+    restart: always
+
+  redis:
+      container_name: redis
+      image: redis:latest
+      ports:
+        - 6379:6379
+      healthcheck:
+        test: ["CMD", "redis-cli", "ping"]
+        interval: 5s
+        timeout: 30s
+        retries: 50
+      restart: always
 
   airflow-webserver:
     container_name: webserver
@@ -83,3 +114,6 @@ services:
       timeout: 10s
       retries: 5
     restart: always
+
+volumes:
+  postgres-db-volume:
