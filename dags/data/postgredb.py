@@ -174,9 +174,10 @@ class DataWareHouse:
             {"view_name": "productView",
             "command": create_command(
                 distinct=['product_id', 'day', 'month', 'year'],
-                columns=['product_id', 'product_name', 'product_image', "product_link", "rating_star", "rating_count", "label_ids", "category_id", 'product_price', "product_discount", '(product_price*(1-product_discount/100)) as price_after_discount', "currency", "stock", "sold", "day", "month", "year"],
+                columns=['product_id', 'product_name', 'product_image', "product_link", "rating_star", "rating_count", "view_count", "label_ids", "category_id", 'product_price', "product_discount", '(product_price*(1-product_discount/100)) as price_after_discount', "sold*(product_price*(1-product_discount/100)) as revenue", "currency", "stock", "sold", "day", "month", "year"],
                 main_table="product",
-                join_tables=["product_time", "product_brand", "product_rating", "product_price", "product_quantity"],
+                join_tables=["product_time", "product_brand", "product_rating", "product_price", "product_quantity", "product_feedback"],
+                where="datetime > now() - interval '1 month'",
                 orders= {"year": "desc", "month": "desc", "day": "desc"}
             )},
             {"view_name": "hot100View",
