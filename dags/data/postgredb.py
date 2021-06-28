@@ -131,7 +131,7 @@ class DataWareHouse:
                 print(f'failed to create view {view_name}')
 
 
-        def create_command(distinct: list=[], columns: list=[], main_table: str="", join_tables: list=[], orders: dict={}):
+        def create_command(distinct: list=[], columns: list=[], main_table: str="", where: str="", join_tables: list=[], orders: dict={}, limit: int=0, offset: int=0):
             command = "select "
             if len(distinct) > 0:
                 command += f"distinct on ({', '.join(map(str, distinct))})"
@@ -144,11 +144,20 @@ class DataWareHouse:
             if join_tables:
                 command += f'natural join {self.VERSION}.'+'\nnatural join {}.'.format(self.VERSION).join(map(str, join_tables)) + "\n"
 
+            if len(where) > 0:
+                command += f'where {where}\n'
+
             if len(orders) > 0:
                 command += "order by "
                 for i, (key, value) in enumerate(orders.items()):
                     command += f"{key} {value}"
-                    command += ", " if i != len(orders)-1 else " "
+                    command += ", " if i != len(orders)-1 else "\n"
+
+            if limit != 0:
+                command += f"limit {limit} "
+
+            if offset != 0:
+                command += f'offset {offset}\n'
 
             return command
  
@@ -169,6 +178,16 @@ class DataWareHouse:
                 main_table="product",
                 join_tables=["product_time", "product_brand", "product_rating", "product_price", "product_quantity"],
                 orders= {"year": "desc", "month": "desc", "day": "desc"}
+            )},
+            {"view_name": "hot100View",
+            "command": create_command(
+                columns=['product_id', 'product_name', 'product_link', 'product_image','category_id', 'view_count', 'product_price', 'product_discount', 'product_price*(1-product_discount/100) as price_after_discount', 'sold', 'sold*(product_price*(1-product_discount/100)) as revenue', 'day', 'month', 'year'],
+                main_table='product',
+                join_tables=['product_quantity', 'product_brand', 'product_price', 'product_feedback', 'product_time'],
+                where="datetime > now() - interval '1 day'",
+                orders={"revenue": 'desc'},
+                limit=100,
+                offset=0
             )}
         ]
         
@@ -197,7 +216,11 @@ class DataWareHouse:
             {"index_name": "tableView_index",
             "table_name": "tableView",
             "columns": ["day", "month", "year", "product_id"]
-            },            
+            },
+            {"index_name": "hot100_index",
+            "table_name": "hot100View",
+            'columns': ['product_id', "revenue"]
+            },
         ]
 
         for i in arr:

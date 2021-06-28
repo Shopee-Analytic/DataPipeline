@@ -21,9 +21,9 @@ DEFAULT_ARGS = {
     'trigger_rule': 'one_success',
     'wait_for_downstream': False,
 }
-
+#"9 0 * * *"
 # [START dag_decorator_usage]
-@dag(default_args=DEFAULT_ARGS, tags=['datapipeline'], start_date=days_ago(1), schedule_interval="9 0 * * *", concurrency=3, max_active_runs=2, default_view='graph')
+@dag(default_args=DEFAULT_ARGS, tags=['datapipeline'], start_date=days_ago(1), schedule_interval=None, concurrency=3, max_active_runs=2, default_view='graph')
 def etl_1():
 
     @task(retries=3, retry_exponential_backoff=True)
@@ -59,7 +59,7 @@ def etl_1():
             with TaskGroup(_id, tooltip='Tasks for section'):
                 etl(link, page)
     
-    indexing()
+    # indexing()
     # a link -> a job
     # a job contains 3 tasks(steps): extract -> transform -> load
 

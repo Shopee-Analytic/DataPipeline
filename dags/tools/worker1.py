@@ -43,9 +43,11 @@ def get_data(url: str) -> dict:
 
 def extract(link: str, newest: int):
     category_id = get_category_id(link)
-    url = get_url(category_id, newest)
-    data = get_data(url)
-    return data
+    if category_id:
+        url = get_url(category_id, newest)
+        return get_data(url)
+    else:
+        return None
 
 def transform(new_data):  # data = [{}, {}, {}, ...]
     data = []
@@ -94,8 +96,8 @@ def load(transformed_data: list):
       
 def indexing(indexes: list=[{"key": "_id", "index_type": 1}, {"key": "fetched_time", "index_type": -1}, {"key": "updated_at", "index_type": -1}]):
     try:
-        datalake = DataLake(role='read_and_write')
-        datalake.create_index(indexes=indexes)
+        datalake = DataLake(role='read_and_write', database='test')
+        datalake.create_index(indexes=indexes   )
         return True
     except Exception as e:
         logger.error(e)
