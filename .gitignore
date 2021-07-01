@@ -145,3 +145,5 @@ dags/data/csv
 db-config.*
 */db-config.*
 plugins 
+*/csv
+*/last_run.txt

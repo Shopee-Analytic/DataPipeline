@@ -185,7 +185,7 @@ class DataWareHouse:
                 columns=['product_id', 'product_name', 'product_link', 'product_image','category_id', 'view_count', 'product_price', 'product_discount', 'product_price*(1-product_discount/100) as price_after_discount', 'sold', 'sold*(product_price*(1-product_discount/100)) as revenue', 'day', 'month', 'year'],
                 main_table='product',
                 join_tables=['product_quantity', 'product_brand', 'product_price', 'product_feedback', 'product_time'],
-                where="datetime > now() - interval '1 day'",
+                where="datetime > current_date",
                 orders={"revenue": 'desc'},
                 limit=100,
                 offset=0
@@ -220,7 +220,7 @@ class DataWareHouse:
             },
             {"index_name": "hot100_index",
             "table_name": "hot100View",
-            'columns': ['product_id', "revenue"]
+            'columns': ['product_id', "revenue", 'day', 'month', 'year']
             },
         ]
 

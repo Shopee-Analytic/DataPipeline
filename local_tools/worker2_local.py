@@ -6,8 +6,8 @@ import psycopg2.errors
 from datetime import datetime
 
 
-if not os.path.exists(os.getcwd()+ "/dags/data/csv"):
-    os.mkdir(os.getcwd()+ "/dags/data/csv")
+if not os.path.exists(os.getcwd()+ "/local_tools/csv/"):
+    os.mkdir(os.getcwd()+ "/local_tools/csv/")
 
 
 import logging
@@ -34,7 +34,7 @@ def extract(last_run: float) -> list:
     return list(DL.products.find({'fetched_time': {'$gte': last_run}}, {"_id": 0}).sort([('fetched_time', -1), ('updated_at', -1)]))
 
 def transform(extracted_product: list, sub_name: str="") -> list:
-    path = os.getcwd()+ "/dags/data/csv/"
+    path = os.getcwd()+ "/local_tools/csv/"
     INDEXING = False
 
     # Data pre-processing
@@ -220,11 +220,10 @@ def create_view_and_index():
     DWH.create_view()
     DWH.create_index()
 
-import sys
 import concurrent.futures
 
-def start():
-    with open('test/last_run.txt') as f:
+def start(offset: int=0, offset_high=None, limit: int=50):
+    with open('local_tools/last_run.txt') as f:
         last_run = float(f.read())
 
     shop_ids = extract_distinct_shop(last_run)
@@ -237,11 +236,12 @@ def start():
         return loading
 
     a = len(shop_ids)
+    if offset_high is not None:
+        a = offset_high
     print("Number of shops: ", a)
-    limit = 50
     with concurrent.futures.ThreadPoolExecutor() as executor:
         futures = []
-        for i in range(0, a, limit):
+        for i in range(offset, a, limit):
             shops = shop_ids[i:i+limit]
             print(f"{i}. Number of shop: ", len(shops))
             futures.append(executor.submit(etl, shops, i))
@@ -254,4 +254,4 @@ def start():
     logger.info(count)
 
 if __name__ == "__main__":
-    start()
+    start(offset=700, limit=50)

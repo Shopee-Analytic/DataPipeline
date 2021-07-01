@@ -104,18 +104,19 @@ def indexing(indexes: list=[{"key": "_id", "index_type": 1}, {"key": "fetched_ti
         logger.error(e)
         return False
 
-def start():
-    with open('test/last_run.txt', "w") as f:
+def start(links: list=[], pages: int=0):
+    with open('local_tools/last_run.txt', "w") as f:
         f.write(str(datetime.timestamp(datetime.utcnow())))
     def etl(link, page: int):
         extracted_data = extract(link, newest=page*100)
         transformed_data = transform(extracted_data)
         return load(transformed_data)
 
-    with open(f'{os.getcwd()}/dags/config/config.yml') as f:
-        data = yaml.load(f, Loader=yaml.FullLoader)
-        links = data['links']
-        pages = data['pages']
+    if not (len(links) > 0 and pages > 0):
+        with open(f'{os.getcwd()}/dags/config/config.yml') as f:
+            data = yaml.load(f, Loader=yaml.FullLoader)
+            links = data['links']
+            pages = data['pages']
 
     with concurrent.futures.ThreadPoolExecutor() as executor:
         futures = []
