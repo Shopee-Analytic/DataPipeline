@@ -195,14 +195,21 @@ class DataWareHouse:
         for i in arr:
             create(view_name = i["view_name"], command = i['command'])
 
+    def drop_index(self, index_names: list=['productView_index', 'tableView_index', 'hot100_index']):
+        for index_name in index_names:
+            drop = f"DROP INDEX IF EXISTS {self.VERSION}.{index_name};"
+            try:
+                with self.get_cursor() as cur:
+                    cur.execute(drop)
+                    print(f'Drop index {index_name} successfully!')
+            except Exception as e:
+                print(e)
 
     def create_index(self):
         def create(index_name, table_name, columns):
-            # drop = f"DROP INDEX IF EXISTS {self.VERSION}.{index_name};"
             sql = f"CREATE UNIQUE INDEX {index_name} ON {self.VERSION}.{table_name} ({', '.join(map(str, columns))});"
             try:
                 with self.get_cursor() as cur:
-                    # cur.execute(drop)
                     cur.execute(sql)
                     print(f"Create index {index_name} on {table_name} successfully!")
             except Exception as e:

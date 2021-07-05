@@ -215,6 +215,9 @@ def load(transformed_data):
         print(e)
         return 0
 
+def drop_index():
+    DataWareHouse(role='admin').drop_index()
+
 def create_view_and_index():
     DWH = DataWareHouse(role='admin')
     DWH.create_view()
@@ -239,6 +242,9 @@ def start(offset: int=0, offset_high=None, limit: int=50):
     if offset_high is not None:
         a = offset_high
     print("Number of shops: ", a)
+
+    drop_index()
+    
     with concurrent.futures.ThreadPoolExecutor() as executor:
         futures = []
         for i in range(offset, a, limit):
