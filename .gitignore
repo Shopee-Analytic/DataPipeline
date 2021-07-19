@@ -147,3 +147,4 @@ db-config.*
 plugins 
 */csv
 */last_run.txt
+.DS_Store
