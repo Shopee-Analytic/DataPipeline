@@ -39,10 +39,10 @@ def get_category_id(url_of_category) -> int:
 def get_url(category_id, newest) -> str:
     limit = 100
     return 'https://shopee.vn/api/v4/search/search_items?by=relevancy&limit={}&match_id={}&newest={}&order=desc&page_type=search&version=2'.format(limit, category_id, newest)
-
+            
 @retry_with_backoff()
 def get_data(url) -> dict:
-    return requests.get(url, headers={'content-type': 'text'}, timeout=10).json()
+    return requests.get(url, headers={'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.95 Safari/537.36', 'content-type': 'text'}, timeout=10).json()
 
 def extract(link, newest):
     category_id = get_category_id(link)
@@ -87,9 +87,9 @@ def transform(new_data):  # data = [{}, {}, {}, ...]
                     'fetched_time': datetime.timestamp(datetime.utcnow())
                 }
             )
-        return data
-    except (TypeError, Exception):
-        return None
+    except Exception as e:
+        logger.error(e)
+    return data
 
 def load(transformed_data):
     datalake = DataLake(role='read_and_write')

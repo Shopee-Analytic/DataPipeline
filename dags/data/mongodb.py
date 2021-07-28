@@ -58,8 +58,9 @@ class DataLake:
 
     def insert_many_products(self, product_data: list) -> list:
         ids = []
-        for _id in self.products.insert_many(product_data).inserted_ids:
-            ids.append(str(_id))
+        if len(product_data) > 0:
+            for _id in self.products.insert_many(product_data).inserted_ids:
+                ids.append(str(_id))
         return ids
 
     def find_one_by_id(self, product_id) -> dict:

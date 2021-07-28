@@ -39,7 +39,7 @@ def get_url(category_id: int, newest: int) -> str:
 
 @retry_with_backoff()
 def get_data(url: str) -> dict:
-    return requests.get(url, headers={'content-type': 'text'}, timeout=10).json()
+    return requests.get(url, headers={'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.95 Safari/537.36', 'content-type': 'text'}, timeout=10).json()
 
 def extract(link: str, newest: int):
     category_id = get_category_id(link)
