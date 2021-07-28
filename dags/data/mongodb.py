@@ -53,14 +53,25 @@ class DataLake:
         else:
             logger.info("Create index on DATALAKE success")
 
+    def drop_index(self):
+        try:
+            self.products.drop_indexes()
+            logger.info('DROP indexes successfully')
+        except Exception as e:
+            logger.error(e)
+
     def insert_one_product(self, product_data: dict) -> str:
         return str(self.products.insert_one(product_data).inserted_id)
 
     def insert_many_products(self, product_data: list) -> list:
         ids = []
-        if len(product_data) > 0:
+        try:
             for _id in self.products.insert_many(product_data).inserted_ids:
                 ids.append(str(_id))
+        except Exception as e:
+            logger.error(e)
+            for data in product_data:
+                ids.append(self.insert_one_product(data))
         return ids
 
     def find_one_by_id(self, product_id) -> dict:
@@ -79,9 +90,9 @@ if __name__ == "__main__":
         {"key": "updated_at", "index_type": -1}
     ]
     DL = DataLake(role='read_and_write')
-    DL.products.drop()
+    DL.drop_index()
     DL.create_index(indexes=indexes)
-    print(len(list(DL.products.find())))
+    # print(len(list(DL.products.find())))
     # print(DL.find_duplicates())
 
     

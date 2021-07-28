@@ -104,9 +104,15 @@ def indexing(indexes: list=[{"key": "_id", "index_type": 1}, {"key": "fetched_ti
         logger.error(e)
         return False
 
+def drop_index():
+    DataLake(role='read_and_write', database="Crawler", collection='shopee').drop_index()
+
 def start(links: list=[], pages: int=0):
     with open('local_tools/last_run.txt', "w") as f:
         f.write(str(datetime.timestamp(datetime.utcnow())))
+
+    drop_index()
+
     def etl(link, page: int):
         extracted_data = extract(link, newest=page*100)
         transformed_data = transform(extracted_data)
