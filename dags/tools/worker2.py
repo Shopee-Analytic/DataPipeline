@@ -44,6 +44,7 @@ def transform(extracted_product: list, sub_name: str="") -> list:
     df.astype(str).drop_duplicates(inplace=True, keep='first')
     df.replace(r';',  ',', regex=True, inplace=True)
     df.replace(r'\n',  ' ', regex=True, inplace=True)
+    df.replace(r'\\n',  ' ', regex=True, inplace=True)
     
     def transform_general(keys: list, table_name: str, sub_name: str=sub_name, normalize_key: dict={}, strip_key: list=[], expand: dict={}, expand_inplace: bool=False, replace_column_value: list=[], special_key: str="") -> dict: 
         file_name = f"{table_name}{sub_name}.csv"
@@ -96,7 +97,7 @@ def transform(extracted_product: list, sub_name: str="") -> list:
                 data[special_key] = data[special_key].apply(lambda x: pd.Series(x if x else "No Brand"))
 
 
-        data.to_csv(file_path, index=INDEXING, sep=DELIMITER)
+        data.to_csv(file_path, index=INDEXING, sep=DELIMITER, encoding='utf8')
         return {'file_path': file_path, 'table_name': table_name, 'keys': keys}
 
     shop = transform_general(
@@ -208,26 +209,21 @@ def transform(extracted_product: list, sub_name: str="") -> list:
 def load(transformed_data):
     DWH = DataWareHouse(role='test')
 
-    try:
+    count = 0
+    for data in transformed_data:
+        try:
+            keys = data['keys']
+            file_path = data['file_path']
+            table_name = data['table_name']
+            DWH.copy_data_by_csv(file_path=file_path, table_name=table_name, keys=keys, delimiter=DELIMITER)
+            count +=1
+        except psycopg2.errors.UniqueViolation as e:
+            logger.error(e)
+            continue
+    if count == 8:
         for data in transformed_data:
-            try:
-                keys = data['keys']
-                file_path = data['file_path']
-                table_name = data['table_name']
-                DWH.copy_data_by_csv(file_path=file_path, table_name=table_name, keys=keys, delimiter=DELIMITER)
-            except psycopg2.errors.UniqueViolation as e:
-                logger.error(e)
-                continue
-            else:
-                # os.remove(file_path)
-                pass
-            finally:
-                os.remove(file_path)
-                pass
-        return len(transformed_data)
-    except Exception as e:
-        print(e)
-        return 0
+            os.remove(data['file_path'])
+    return len(transformed_data)
 
 def create_view_and_index():
     DWH = DataWareHouse(role='test')

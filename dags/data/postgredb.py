@@ -45,16 +45,10 @@ def get_pool(role):
     )
 
 class DataWareHouse:
-    def __init__(self, role='admin'):
-        self.VERSION = "t01"
+    def __init__(self, role='admin', version='t01'):
+        self.VERSION = version
         self.role = role
-        self.open_pool()
-    def open_pool(self):
-        try:
-            self.pool = get_pool(self.role)
-            return True
-        except Exception as e:
-            print(e)
+        self.pool = get_pool(self.role)
 
     @contextmanager
     def get_cursor(self):
@@ -89,8 +83,11 @@ class DataWareHouse:
         try:
             with self.get_cursor() as cur:
                 try:
-                    with open(file_path, encoding="utf8") as f:
+                    with open(file_path, 'r', encoding="utf8") as f:
+                        # remove header
                         next(f)
+
+                        # copy to data warehouse
                         cur.copy_from(f, self.VERSION+"."+table_name, columns=keys, sep=delimiter)
                 except Exception as e:
                     raise e
@@ -234,9 +231,9 @@ class DataWareHouse:
             create(i['index_name'], i['table_name'], i["columns"])
 
 if __name__ == "__main__":
-    # path = "dags\data\command\create_table.sql"
-    # DataWareHouse(role='admin').exec(path)
-    DW = DataWareHouse()
-    DW.create_view()
-    DW.create_index()
+    path = "dags/data/command/create_table.sql"
+    DataWareHouse(role='test').exec(path)
+    # DW = DataWareHouse()
+    # DW.create_view()
+    # DW.create_index()
     

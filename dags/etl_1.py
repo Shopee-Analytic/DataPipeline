@@ -1,7 +1,6 @@
 from airflow.decorators import dag, task, task_group
 from airflow.utils.dates import days_ago
 from tools import worker1
-
 import os
 import yaml
 from datetime import timedelta
@@ -21,7 +20,7 @@ DEFAULT_ARGS = {
 }
 #"9 0 * * *"
 # [START dag_decorator_usage]
-@dag(default_args=DEFAULT_ARGS, tags=['datapipeline'], start_date=days_ago(1), schedule_interval=None, concurrency=4, max_active_runs=2, default_view='graph')
+@dag(default_args=DEFAULT_ARGS, tags=['datapipeline'], start_date=days_ago(1), schedule_interval=None, concurrency=6, max_active_runs=2, default_view='graph')
 def etl_1():
 
     @task(retries=3, retry_exponential_backoff=True)
@@ -36,7 +35,7 @@ def etl_1():
     def load(transformed_data):
         return worker1.load(transformed_data)
 
-    @task(retries=3, retry_exponential_backoff=True)
+    @task(depends_on_past=True, retries=3, retry_exponential_backoff=True)
     def index():
         return worker1.indexing()
 
@@ -44,19 +43,17 @@ def etl_1():
     def etl(link, page):
         return load(transform(extract(link=link, page=page)))
 
-    def start():
-        with open(f'{os.getcwd()}/dags/config/config-with-airflow.yml') as f:
-            data = yaml.load(f, Loader=yaml.FullLoader)
-        return data
 
-    data = start()
-    tasks = []
-    for link in data["links"]:
+    # etl(get_data_task.output) >> index()
+    with open(f'{os.getcwd()}/dags/config/config-with-airflow.yml') as f:
+        data = yaml.load(f, Loader=yaml.FullLoader)
+    etls = []
+    for link in data['links']:
         for page in range(data['pages']):
-            tasks.append(etl(link=link, page=page))
-
-    task_index = index()
-    tasks >> task_index
+            etls.append(etl(link, page))
     
-dag = etl_1()
+    etls >> index()
+
+
+dag1 = etl_1()
 # [END dag_decorator_usage]
