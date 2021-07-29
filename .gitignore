@@ -149,3 +149,5 @@ plugins
 */last_run.txt
 .DS_Store
 airflow/
+
+*.sh
