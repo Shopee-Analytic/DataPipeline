@@ -14,7 +14,6 @@ x-airflow-common:
     AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: 'true'
     AIRFLOW__CORE__LOAD_EXAMPLES: 'false'
     AIRFLOW__API__AUTH_BACKEND: 'airflow.api.auth.backend.basic_auth'
-    _PIP_ADDITIONAL_REQUIREMENTS: ${_PIP_ADDITIONAL_REQUIREMENTS:-requirements.txt}
   volumes:
     - ./dags:/opt/airflow/dags
     - ./logs:/opt/airflow/logs
@@ -28,6 +27,7 @@ x-airflow-common:
 
 services:
   postgres:
+    container_name: postgres
     image: postgres:13
     environment:
       POSTGRES_USER: airflow
@@ -41,18 +41,20 @@ services:
       retries: 5
     restart: always
 
-  redis:
-    image: redis:latest
-    ports:
-      - 6379:6379
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 5s
-      timeout: 30s
-      retries: 50
-    restart: always
+#   redis:
+#     container_name: redis
+#     image: redis:latest
+#     ports:
+#       - 6379:6379
+#     healthcheck:
+#       test: ["CMD", "redis-cli", "ping"]
+#       interval: 5s
+#       timeout: 30s
+#       retries: 50
+#     restart: always
 
   airflow-webserver:
+    container_name: webserver
     <<: *airflow-common
     command: webserver
     ports:
@@ -65,6 +67,7 @@ services:
     restart: always
 
   airflow-scheduler:
+    container_name: scheduler
     <<: *airflow-common
     command: scheduler
     healthcheck:
@@ -75,6 +78,7 @@ services:
     restart: always
 
   airflow-worker:
+    container_name: worker
     <<: *airflow-common
     command: celery worker
     healthcheck:
@@ -87,6 +91,7 @@ services:
     restart: always
 
   airflow-init:
+    container_name: init-db
     <<: *airflow-common
     command: version
     environment:

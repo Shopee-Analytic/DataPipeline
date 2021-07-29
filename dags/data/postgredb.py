@@ -1,4 +1,3 @@
-from sys import version
 import yaml
 from psycopg2.pool import ThreadedConnectionPool
 from random import uniform

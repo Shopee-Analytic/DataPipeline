@@ -5,9 +5,9 @@ from data.mongodb import DataLake
 import psycopg2.errors
 from datetime import datetime
 
-
-if not os.path.exists(os.getcwd()+ "/dags/data/csv"):
-    os.mkdir(os.getcwd()+ "/dags/data/csv")
+path = os.getcwd()+ "/dags/data/csv/"
+if not os.path.exists(path):
+    os.mkdir(path)
 
 
 import logging
@@ -19,8 +19,7 @@ DELIMITER = ";"
 
 def extract_distinct_shop(last_run) -> list:
     DL = DataLake(role='read_and_write', collection='test')
-    return list(DL.products.find({'fetched_time': {'$gte': last_run}}, {"_id": 0})
-    .sort([('fetched_time', -1), ('updated_at', -1)]).distinct('shop_id'))
+    return list(DL.products.find({'fetched_time': {'$gte': last_run}}, {"_id": 0}).sort([('fetched_time', -1), ('updated_at', -1)]).distinct('shop_id'))
 
 def extract_product_from_shop(shop_id: int, last_run) -> list:
     DL = DataLake(role='read_and_write', collection='test')
@@ -28,15 +27,15 @@ def extract_product_from_shop(shop_id: int, last_run) -> list:
 
 def extract_product_from_shops(shop_ids: list, last_run) -> list:
     DL = DataLake(role='read_and_write', collection='test')
-    return list(DL.products.find({'fetched_time': {'$gte': last_run}, 
-    'shop_id': {'$in': shop_ids}}, {"_id": 0}).sort([('fetched_time', -1)]))
+    return list(DL.products.find({'fetched_time': {'$gte': last_run}, 'shop_id': {'$in': shop_ids}}, {"_id": 0}).sort([('fetched_time', -1)]))
 
 def extract(last_run: float) -> list:
     DL = DataLake(role='read_and_write', collection='test')
     return list(DL.products.find({'fetched_time': {'$gte': last_run}}, {"_id": 0}).sort([('fetched_time', -1), ('updated_at', -1)]))
 
 def transform(extracted_product: list, sub_name: str="") -> list:
-    path = os.getcwd()+ "/dags/data/csv/"
+    if not (len(extracted_product) > 0):
+        raise "None list"
     INDEXING = False
 
     # Data pre-processing
@@ -72,7 +71,7 @@ def transform(extracted_product: list, sub_name: str="") -> list:
 
         if replace_column_value:
             def transform_column(x):
-                return x.replace(value['old_value'], value['new_value'])
+                return str(x).replace(value['old_value'], value['new_value'])
 
             for column in replace_column_value:
                 for column_name, values in column.items():
@@ -105,11 +104,16 @@ def transform(extracted_product: list, sub_name: str="") -> list:
         table_name = "shop",
         replace_column_value = [
             {'shopee_verified': [
-                {"old_value": "None", "new_value": 'False'}
+                {"old_value": "None", "new_value": 'False'},
+                {"old_value": "nan", "new_value": 'False'},
+                {"old_value": "none", "new_value": 'False'},
+                {"old_value": "Nan", "new_value": 'False'},
             ]},
             {'is_official_shop': [
                 {"old_value": "None", "new_value": 'False'},
                 {"old_value": "nan", "new_value": 'False'},
+                {"old_value": "none", "new_value": 'False'},
+                {"old_value": "Nan", "new_value": 'False'},
             ]},
         ]
     )
@@ -135,11 +139,15 @@ def transform(extracted_product: list, sub_name: str="") -> list:
                     {"old_value": "]", "new_value": "}"},
                     {"old_value": "nan", "new_value": "{}"},
                     {"old_value": "None", "new_value": "{}"},
+                    {"old_value": "none", "new_value": '{}'},
+                    {"old_value": "Nan", "new_value": '{}'},
                 ]
             },
             {"product_brand": [
                     {"old_value": "None", "new_value": "No Brand"},
-                    {"old_value": "Nan", "new_value": "No Brand"}
+                    {"old_value": "Nan", "new_value": "No Brand"},
+                    {"old_value": "nan", "new_value": 'No Brand'},
+                    {"old_value": "none", "new_value": 'No'},
             ]}
         ],
         special_key = "product_brand"
@@ -149,13 +157,17 @@ def transform(extracted_product: list, sub_name: str="") -> list:
         table_name= 'product_price',
         replace_column_value = [
             {"is_freeship": [
-                    {"old_value": "nan", "new_value": "False"},
-                    {"old_value": "None", "new_value": "False"},
+                {"old_value": "None", "new_value": 'False'},
+                {"old_value": "nan", "new_value": 'False'},
+                {"old_value": "none", "new_value": 'False'},
+                {"old_value": "Nan", "new_value": 'False'},
                 ]
             },
             {"is_on_flash_sale": [
-                    {"old_value": "nan", "new_value": "False"},
-                    {"old_value": "None", "new_value": "False"},
+                {"old_value": "None", "new_value": 'False'},
+                {"old_value": "nan", "new_value": 'False'},
+                {"old_value": "none", "new_value": 'False'},
+                {"old_value": "Nan", "new_value": 'False'},
                 ]
             },
         ]
