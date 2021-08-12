@@ -134,3 +134,20 @@ data.json
 unittest.py
 log/
 test/
+*.bat
+
+# Log of ETL
+/logs
+
+# Temp data csv
+dags/data/csv
+
+db-config.*
+*/db-config.*
+plugins 
+*/csv
+*/last_run.txt
+.DS_Store
+airflow/
+
+*.sh

@@ -1,19 +1,94 @@
 # ShopeeCrawler
-Crawl data from Shopee and analyze 
+Crawl data from Shopee and visualize 
 
 ## Instructions
-Using python==3.8.5
+1. Create a *db-config.yml* in `dags/config`:
+```yml
+mongo:
+  admin:
+    url:
+    usernamme:
+    password:
+  read_only:
+    url:
+    username:
+    password:
+  read_and_write:
+    url:
+    username:
+    password:
 
-1. Run ```pip install requirements.txt``` to install all needed packages
-2. Crawl data
-    2.1 Run ```main.py crawl_to_file --input config.yml --output <file_name>.json``` to start crawling and save to file
-    2.2 Run ```main.py crawl --input config.yml <number_of_page=1>``` to start crawling and insert to database
-3. Run ```main.py visualize --file <file_name>.json <number_of_page>``` to visualize it
+postgre:
+  admin:
+    host:
+    database: 
+    user: 
+    password:
+    port:
+    url:
+```
+
+2. Modify *config.yml* or *config-with-ariflow.yml* in `dags/config.yml` for crawler:
+```yml
+links: # link by each category to crawl
+- https://shopee.vn/dien-thoai-phu-kien-cat.84
+- https://shopee.vn/Th%E1%BB%9Di-Trang-Nam-cat.78
+- https://shopee.vn/M%C3%A1y-t%C3%ADnh-Laptop-cat.13030
+pages: 80 # Number of page of that category
+```
+
+3. Using one of two ways below: Docker with airflow / Locally with threadpool
+### Using docker:
+1. Create a _.env_ in base directory contains airflow's config:
+```env
+AIRFLOW_IMAGE_NAME=
+AIRFLOW__CORE__EXECUTOR=CeleryExecutor
+
+# Database
+AIRFLOW__CORE__SQL_ALCHEMY_CONN=
+AIRFLOW__CELERY__RESULT_BACKEND=
+AIRFLOW__CELERY__BROKER_URL=
+
+# Airflow ID
+AIRFLOW_UID=
+AIRFLOW_GID=
+
+# Airflow WEBSERVER
+_AIRFLOW_WWW_USER_USERNAME=
+_AIRFLOW_WWW_USER_PASSWORD=
+
+# Airflow UPDATE DATA
+_AIRFLOW_DB_UPGRADE=
+_AIRFLOW_WWW_USER_CREATE=
+
+# Postgre's config
+POSTGRES_USER=
+POSTGRES_PASSWORD=
+POSTGRES_DB=
+```
+2. Create database for scheduler
+```cli
+docker compose up (-d) airflow-init
+```
+3. Start all build-in services: posgre, redis, flower, webserver, scheduler, worker 
+```cli
+docker compose up (-d)
+```
+*Note:
+- Add "-d" in command to run on background
+- There're pretty much services so minimum required is 8gb of ram.
 
 
-## Data visualization
-- Data we'll be stored in _data/data.json_ as dicts in a list:
-
-|product_id | shop_id  | product_name |   ...  |
-|    :---:  |   :---:  |     :---:    |  :---: |
-|1357623842 | 80094231 | product_name | others |
+### Using local CLI:
+1. Install all needed packages
+```cli
+pip/pip3 install -r requirements.txt
+```
+2. Start etl1
+```cli
+python/python3 local.py --etl 1
+```
+3. Start etl2
+```cli
+python/python3 local.py --etl 2
+```
