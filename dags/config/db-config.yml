@@ -1,25 +1,25 @@
 mongo:
   admin:
-    url: "mongodb+srv://admin:hgT0qLpFobttAYFO@cluster0.b2b5a.mongodb.net/myFirstDatabase?retryWrites=true&w=majority&ssl=true&ssl_cert_reqs=CERT_NONE"
-    usernamme: "admin"
-    password: "hgT0qLpFobttAYFO"
+    url:
+    usernamme:
+    password:
   read_only:
-    url: "mongodb+srv://read_only:uh1y3xgh56a9Hhyl@cluster0.b2b5a.mongodb.net/myFirstDatabase?retryWrites=true&w=majority&ssl=true&ssl_cert_reqs=CERT_NONE"
-    username: "read_only"
-    password: "uh1y3xgh56a9Hhyl"
+    url:
+    username:
+    password:
   read_and_write:
-    url: "mongodb+srv://read_and_write:Lb8bW2naCU2jfSuP@cluster0.b2b5a.mongodb.net/myFirstDatabase?retryWrites=true&w=majority&ssl=true&ssl_cert_reqs=CERT_NONE"
-    username: "read_and_write"
-    password: "Lb8bW2naCU2jfSuP"
+    url:
+    username:
+    password:
 
 postgre:
   admin:
-    host: "bfzs3f1hetgaveiesq4e-postgresql.services.clever-cloud.com"
-    database: "bfzs3f1hetgaveiesq4e"
-    user: "u3avr14nzuosnobvncuw"
-    password: "72m59WA46DAQkK1iwZDS"
-    port: "5484"
-    url: "postgresql://u3avr14nzuosnobvncuw:72m59WA46DAQkK1iwZDS@bfzs3f1hetgaveiesq4e-postgresql.services.clever-cloud.com:5484/bfzs3f1hetgaveiesq4e"
+    host:
+    database:
+    user:
+    password:
+    port:
+    url:
 
   localhost:
     host: localhost
