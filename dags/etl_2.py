@@ -22,7 +22,7 @@ DEFAULT_ARGS = {
 }
 # "18 0 * * *"
 # [START dag_decorator_usage]
-@dag(default_args=DEFAULT_ARGS, tags=['datapipeline'], start_date=days_ago(1), schedule_interval=None, concurrency=8, max_active_runs=2, default_view='graph')
+@dag(default_args=DEFAULT_ARGS, tags=['datapipeline'], start_date=days_ago(1), schedule_interval="10 0 * * *", concurrency=8, max_active_runs=2, default_view='graph')
 def etl_2():
     def get_last_run(dag_id='etl_1'):
         dag_runs = DagRun.find(dag_id=dag_id)
